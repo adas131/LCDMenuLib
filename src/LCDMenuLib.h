@@ -29,7 +29,7 @@
 /* ******************************************************************** */
 /* Autor:            Nils Feldkämper                                        */
 /* Create:            03.02.2008                                            */
-/* Edit:            27.02.2017                                            */
+/* Edit:            23.09.2017                                            */
 /* ******************************************************************** */
 /* error reporting (english / german)                                    */
 /*    https://github.com/Jomelo/LCDMenuLib/issues                            */
@@ -40,7 +40,7 @@
 #ifndef LCDMenuLib_h
 #    define LCDMenuLib_h
 
-#    define _LCDML_VERSION                      "LCDML v2.4.0"
+#    define _LCDML_VERSION                      "LCDML v2.4.0 beta for ESP32"
 
 /* config */
 #    define _LCDML_DISP_cfg_cursor_deep         6        // save the last position of the cursor until layer xx
@@ -97,7 +97,7 @@
 #        define __PROG_TYPES_COMPAT__
 #    endif
 
-#    if defined ( ESP8266 )
+#    if defined ( ESP8266 ) || defined ( ESP32 )
 #    else
 #        include <avr/pgmspace.h>
 #    endif
@@ -191,7 +191,7 @@
             uint8_t getCursorPos();    
             /* get the corrent cursor position */
             uint8_t getCursorPosAbs();    
-            /* get childs of an element */
+            /* get the number of childs from a parent element */
             uint8_t getChilds();
             /* get parent */
             uint8_t getParentId();

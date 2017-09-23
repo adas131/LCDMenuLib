@@ -30,7 +30,7 @@
 //
 // Autor:            Nils Feldkaemper                
 // Create:            03.02.2008                                            
-// Edit:            27.02.2017                                            
+// Edit:            23.09.2017                                            
 // License:            MIT License                                            
 //
 // ********************************************************************
@@ -182,8 +182,6 @@
         LCDML_DISP_update_menu_direct(id)
         
         
-#    define LCDML_DISP_copyFlashContent(var, id) \
-        strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.content_id[id]])));
 
 #    define LCDML_DISP_getRamContent(id)    \
         g_LCDML_DISP_lang_table[LCDML.content_id[id]]    
@@ -191,7 +189,8 @@
         
 
             
-#    if defined ( ESP8266 )
+#    if defined ( ESP8266 ) || defined ( ESP32 )
+
 
 #        define LCDML_DISP_add(name, disp, item_parent, item_child, content, function)\
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content};\
@@ -204,9 +203,6 @@
 
 #        define LCDML_DISP_addMenu(name, disp, item_parent, item_child, content)\
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content};\
-            void function ## _loop_setup(); \
-            void function ## _loop(); \
-            void function ## _loop_end(); \
             LCDMenu item_parent ## _ ## item_child(name, disp); \
             void LCDML_DISP_##name##_function() { g_LCDML_DISP_functions_loop_setup[name] = LCDML_FUNC_loop_setup;  g_LCDML_DISP_functions_loop[name] = LCDML_FUNC_loop; g_LCDML_DISP_functions_loop_end[name] = LCDML_FUNC_loop_end; item_parent.addChild(item_parent ## _ ## item_child); }
 
@@ -242,6 +238,10 @@
             }            
             
 #    else
+        // no esp 
+#       define LCDML_DISP_copyFlashContent(var, id) \
+            strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.content_id[id]])));
+            
 
 #        define LCDML_DISP_add(name, disp, item_parent, item_child, content, function)\
             const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = {content};\
@@ -258,26 +258,20 @@
             void function ## _loop_end(); \
             LCDMenu item_parent ## _ ## item_child(name, disp); \
             void LCDML_DISP_##name##_function() { g_LCDML_DISP_functions_loop_setup[name] = function##_loop_setup;  g_LCDML_DISP_functions_loop[name] = function##_loop; g_LCDML_DISP_functions_loop_end[name] = function##_loop_end; item_parent.addChild(item_parent ## _ ## item_child); }
+
             
-                        
 #        define LCDML_DISP_addMenu(name, disp, item_parent, item_child, content)\
             const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = {content};\
-            void function ## _loop_setup(); \
-            void function ## _loop(); \
-            void function ## _loop_end(); \
             LCDMenu item_parent ## _ ## item_child(name, disp); \
             void LCDML_DISP_##name##_function() { g_LCDML_DISP_functions_loop_setup[name] = LCDML_FUNC_loop_setup;  g_LCDML_DISP_functions_loop[name] = LCDML_FUNC_loop; g_LCDML_DISP_functions_loop_end[name] = LCDML_FUNC_loop_end; item_parent.addChild(item_parent ## _ ## item_child); }
 
 #        define LCDML_DISP_addMenu_use_ram(name, disp, item_parent, item_child, content)\
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content};\
-            void function ## _loop_setup(); \
-            void function ## _loop(); \
-            void function ## _loop_end(); \
             LCDMenu item_parent ## _ ## item_child(name, disp); \
             void LCDML_DISP_##name##_function() { g_LCDML_DISP_functions_loop_setup[name] = LCDML_FUNC_loop_setup;  g_LCDML_DISP_functions_loop[name] = LCDML_FUNC_loop; g_LCDML_DISP_functions_loop_end[name] = LCDML_FUNC_loop_end; item_parent.addChild(item_parent ## _ ## item_child); }
         
 
-#        define LCDML_DISP_addFuncParam(name, disp, item_parent, item_child, content, function, para)\
+#        define LCDML_DISP_addParam(name, disp, item_parent, item_child, content, function, para)\
             const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = { content }; \
             void function ## _loop_setup(); \
             void function ## _loop(); \
@@ -285,7 +279,7 @@
             LCDMenu item_parent ## _ ## item_child(name, disp); \
             void LCDML_DISP_##name##_function() { g_LCDML_DISP_functions_loop_setup[name] = function##_loop_setup;  g_LCDML_DISP_functions_loop[name] = function##_loop; g_LCDML_DISP_functions_loop_end[name] = function##_loop_end; item_parent.addChild(item_parent ## _ ## item_child); g_lcdml_param[name] = para;  }
 
-#        define LCDML_DISP_addFuncParam_use_ram(name, disp, item_parent, item_child, content, function, para)\
+#        define LCDML_DISP_addParam_use_ram(name, disp, item_parent, item_child, content, function, para)\
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = { content }; \
             void function ## _loop_setup(); \
             void function ## _loop(); \
@@ -428,7 +422,7 @@
         LCDML_BACK_function_##name
     // macro: creates the LCDML_BACK managemand variables
     
-#    if defined ( ESP8266 )    
+#    if defined ( ESP8266 ) || defined ( ESP32 )   
     
 #        define LCDML_BACK_init(cnt)\
             LCDML_FuncPtr g_LCDML_BACK_priority[cnt+1];\
@@ -474,7 +468,7 @@
 
 
 
-#    if defined ( ESP8266 )
+#    if defined ( ESP8266 ) || defined ( ESP32 )
 // thread create
     // macro: help to create a new thread: generate weak functions
 #        define LCDML_BACK_help_new_thread(id, name, status)\
