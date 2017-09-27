@@ -52,13 +52,14 @@
     
     #define     _LCDML_stop                 0
     #define     _LCDML_start                1
-    #define     _LCDML_stable               2
+    #define     _LCDML_startDirect          2
+    #define     _LCDML_stable               3
     
-    #define     _LCDML_jp_root              0
-    #define     _LCDML_jp_next              1
+    #define     _LCDML_root                 0
+    #define     _LCDML_next                 1
     
-    #define     _LCDML_millis               0
-    #define     _LCDML_micros               1
+    #define     _LCDML_ms                   0
+    #define     _LCDML_us                   1
 
     #define     _LCDML_BACK_default_id      255        
 
@@ -140,9 +141,11 @@
             g_LCDML_BACK_priority[id] = LCDML_BACK_function_##name;\
             LCDML_bitWriteValue(g_LCDML_BACK_mil_mic, id, time_type); \
             LCDML_bitWriteValue(g_LCDML_BACK_ret, id, ret); \
-            if(status == 1) {\
+            if(status == _LCDML_start) {\
                 LCDML_BACK_start(name);\
-            } else if(status == 2) { \
+            } else if(status == _LCDML_startDirect) { \
+                LCDML_BACK_startDirect(name); \
+            } else if(status == _LCDML_stop) { \
                 LCDML_BACK_stopStable(name); \
             }\
         }
@@ -171,6 +174,9 @@
 // ----------------------------------------
     // macro: thread start single
     #define LCDML_BACK_start(name)\
+        LCDML_bitWriteValue(g_LCDML_BACK_start_stop, g_LCDML_BACK_id__##name, true)
+        
+    #define LCDML_BACK_startDirect(name)\
         LCDML_BACK_dynamic_timeToZero(name);\
         LCDML_bitWriteValue(g_LCDML_BACK_start_stop, g_LCDML_BACK_id__##name, true)
 
@@ -186,12 +192,16 @@
     // macro: thread reset
     #define LCDML_BACK_reset(name)\
         LCDML_bitWriteValue(g_LCDML_BACK_reset, g_LCDML_BACK_id__##name, false); \
-        g_LCDML_BACK_timer[g_LCDML_BACK_id__##name] = 0
-        
+        LCDML_BACK_dynamic_restartTimer(name)
+            
     //macro: thread reStart 
     #define LCDML_BACK_restart(name)\
         LCDML_BACK_reset(name);\
         LCDML_BACK_start(name)
+        
+    #define LCDML_BACK_restartDirect(name)\
+        LCDML_BACK_reset(name);\
+        LCDML_BACK_startDirect(name)
 
 // ----------------------------------------
 // Event control

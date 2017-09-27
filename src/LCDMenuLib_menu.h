@@ -54,7 +54,8 @@
         public:
             uint8_t name;                                // Name of this menu
             uint8_t group;                               // element group (0-7)
-            uint8_t config;                              // element config (0-3 : parameter, 4 = callback function, 5 = switch function, 6-7 free)                               
+            uint8_t param;                               // element config (0-3 : parameter, 4 = callback function, 5 = switch function, 6-7 free)                               
+            
             
             LCDMenu(uint8_t n, uint8_t p_group, uint8_t p_config);            // Constructs the menu with a name and a NULL use function (be careful calling it)
             

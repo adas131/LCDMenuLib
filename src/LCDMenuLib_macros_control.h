@@ -48,25 +48,7 @@
      * UPDATE DISPLAY                                                     
      * ------------------
      */
-    #define LCDML_DISP_update()             (LCDML.getFunction() == _LCDML_NO_FUNC || bitRead(LCDML.control, _LCDML_control_funcend) || bitRead(LCDML.control, _LCDML_control_update_direct))
-    #define LCDML_DISP_update_content()     (bitRead(LCDML.control, _LCDML_control_disp_update) || bitRead(LCDML.control, _LCDML_control_update_direct))
-    #define LCDML_DISP_update_cursor()      (bitRead(LCDML.control, _LCDML_control_cursor_update))
     
-    #define LCDML_DISP_update_end() \
-        bitClear(LCDML.control, _LCDML_control_disp_update); \
-        bitClear(LCDML.control, _LCDML_control_cursor_update); \
-        bitClear(LCDML.control, _LCDML_control_update_direct)
-    
-    #define LCDML_DISP_update_menu_direct(id) \
-        if(LCDML.getFunction() == _LCDML_NO_FUNC) { \
-            for(int i=0; i < ((LCDML.getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.getChilds())); i++) { \
-                if(LCDML.content_id[i] == id) { \
-                    bitSet(LCDML.control, _LCDML_control_update_direct); \
-                    LCDML_lcd_menu_display(); \
-                    break; \
-                } \
-            } \
-        } 
 
     /* ------------------ 
      * CONTROL                                                      

@@ -60,8 +60,9 @@ LCDMenuLib::LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols)
     layer_save[0]   = 0;
     child_cnt       = 0;
     rows            = p_rows;
-    cols            = (p_cols-1);     
-    function        = _LCDML_NO_FUNC;
+    cols            = (p_cols-1); 
+    activMenu       = NULL;
+    //function        = _LCDML_NO_FUNC;
     button          = 0;    
 }
 
@@ -95,8 +96,8 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 found = 1;                
                 break;
             }
-            else {
-                function = _LCDML_NO_FUNC;
+            else {                
+                activMenu = NULL;               
             }
 
             found = selectElementDirect(*tmp, p_search); //recursive search until found is true or last item reached
@@ -106,7 +107,7 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 break; 
             } 
             else {
-                function = _LCDML_NO_FUNC;                
+                activMenu = NULL;               
                 //nothing found
                 //goto next root element
                 goBack();
@@ -122,7 +123,7 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 break;
             } 
             else {
-                function = _LCDML_NO_FUNC;
+                activMenu = NULL;                
                 //select next element            
                 Button_udlr(_LCDML_button_down);                
             }
@@ -145,7 +146,7 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
 void        LCDMenuLib::goRoot()
 /* ******************************************************************** */
 {
-    if(function != _LCDML_NO_FUNC) {
+    if(activMenu != NULL) {
         bitSet(control, _LCDML_control_go_root);
         Button_quit();
     } else {
@@ -178,21 +179,23 @@ void        LCDMenuLib::jumpToElement(uint8_t p_element)
 /* ******************************************************************** */
 {    
     // check if function is active
-    if(function == p_element) {
-        return;
+    if(activMenu != NULL) {
+        if(activMenu->name == p_element) {
+            return;
+        }
+        Button_quit();
+        activMenu = NULL;  
+        goRoot();        
+        
+        bitSet(control, _LCDML_control_disable_hidden);
+        if(selectElementDirect(*rootMenu, p_element)) { //search element
+            //open this element
+            goEnter();
+            //Button_enter();
+        }
+        bitClear(control, _LCDML_control_disable_hidden);
+        bitClear(control, _LCDML_control_search_display);
     }
-    Button_quit();
-    function = _LCDML_NO_FUNC;    
-    goRoot();        
-    
-    bitSet(control, _LCDML_control_disable_hidden);
-    if(selectElementDirect(*rootMenu, p_element)) { //search element
-        //open this element
-        goEnter();
-        //Button_enter();
-    }
-    bitClear(control, _LCDML_control_disable_hidden);
-    bitClear(control, _LCDML_control_search_display);
 }
 
 
@@ -250,28 +253,27 @@ void    LCDMenuLib::goEnter()
 /* ******************************************************************** */
 {
     LCDMenu *tmp;    // declare opjects
-    uint8_t name        = function;
+    LCDMenu *checkTmp;
     uint8_t j            = 0;
     
-    if (function == _LCDML_NO_FUNC) { //check button lock        
+    if (activMenu == NULL) { //check button lock        
         //check if element has childs
         if ((tmp = curMenu->getChild(curloc + curloc_correction())) != NULL) { // check child            
-            goMenu(*tmp);                    
-            name = tmp->name;        
+            goMenu(*tmp); 
 
             //check if element has childs            
-            if ((tmp = tmp->getChild(0)) != NULL) {            
+            if ((checkTmp = tmp->getChild(0)) != NULL) {            
                 
-                while ((tmp = tmp->getSibling(1)) != NULL)
+                while ((checkTmp = checkTmp->getSibling(1)) != NULL)
                 {
-                    if (bitRead(group_en, tmp->group) || bitRead(control, _LCDML_control_disable_hidden)) {
+                    if (bitRead(group_en, checkTmp->group) || bitRead(control, _LCDML_control_disable_hidden)) {
                         j++;
                     }                    
                 }
             }
 
-            if (j == 0) {                
-                function = name;
+            if (j == 0) { 
+                activMenu = tmp; 
                 countChilds();
             }            
         }        
@@ -479,7 +481,7 @@ void    LCDMenuLib::doScroll()
 void    LCDMenuLib::Button_enter()
 /* ******************************************************************** */
 {    
-    if (function != _LCDML_NO_FUNC)
+    if (activMenu != NULL)
     {            
         //function is active        
         bitSet(button, _LCDML_button_enter);
@@ -498,7 +500,7 @@ void    LCDMenuLib::Button_enter()
 void    LCDMenuLib::Button_quit()
 /* ******************************************************************** */
 {
-    if (function != _LCDML_NO_FUNC) {
+    if (activMenu != NULL) {
         bitSet(control, _LCDML_control_funcend);
         bitSet(button,  _LCDML_button_quit);
     } else {
@@ -516,7 +518,7 @@ void    LCDMenuLib::Button_quit()
 void    LCDMenuLib::Button_udlr(uint8_t but)
 /* ******************************************************************** */
 {        
-    if (function == _LCDML_NO_FUNC) {    //check menu lock    
+    if (activMenu == NULL) {    //check menu lock    
         //enable up and down button for menu mode and scroll        
         switch(but)
         {
@@ -531,6 +533,12 @@ void    LCDMenuLib::Button_udlr(uint8_t but)
 
 
 
+
+void    LCDMenuLib::resetFunction()
+{
+    activMenu = NULL;
+}
+
  
 
 /* ******************************************************************** *
@@ -541,9 +549,33 @@ void    LCDMenuLib::Button_udlr(uint8_t but)
  * ******************************************************************** */
 uint8_t    LCDMenuLib::getFunction()
 /* ******************************************************************** */
-{    
-    return function;    
+{ 
+    if(activMenu != NULL) {
+        return activMenu->name;
+    } else {
+        return _LCDML_NO_FUNC;
+    }        
 }
+
+
+/* ******************************************************************** *
+ * public: get the name of the active function
+ * @param
+ * @return
+ *    active function (uint8)
+ * ******************************************************************** */
+uint8_t    LCDMenuLib::getFunctionParam()
+/* ******************************************************************** */
+{    
+     if(activMenu != NULL) {
+        return activMenu->param;
+    } else {
+        return 0;
+    }     
+}
+
+
+
 
 /* ******************************************************************** *
  * public: return the position of the current layer

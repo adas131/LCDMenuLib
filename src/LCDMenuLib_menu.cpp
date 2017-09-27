@@ -53,7 +53,7 @@ LCDMenu::LCDMenu(uint8_t n, uint8_t p_group, uint8_t p_config)
     child   = NULL;
     name    = n;            // element name 
     group   = p_group;      // element group
-    config  = p_config;     // element configuration
+    param  = p_config;     // element configuration
 }
 
 

@@ -40,7 +40,7 @@
     #define LCDMenuLib_h
 
     // Version
-    #define _LCDML_VERSION                       "LCDML v2.4.0 beta for ESP32"
+    #define _LCDML_VERSION                       "LCDML v3.0.0 beta for ESP32"
 
     // Debug Settings
     #define _LCDML_DBG                           0
@@ -90,11 +90,20 @@
     #define _LCDML_control_funcend              1
     #define _LCDML_control_disable_hidden       0
     
+    #define _LCDML_control2_f7                  7
+    #define _LCDML_control2_f6                  6
+    #define _LCDML_control2_f5                  5
+    #define _LCDML_control2_f4                  4
+    #define _LCDML_control2_f3                  3
+    #define _LCDML_control2_f2                  2
+    #define _LCDML_control2_func_end            1
+    #define _LCDML_control2_func_return         0
+    
     // Bit pos funcmode
     #define _LCDML_menumode_rollover            7   
 
     // Bit position groups
-    #define _LCDML_G8                           7
+    #define _LCDML_HIDE                         7
     #define _LCDML_G7                           6
     #define _LCDML_G6                           5
     #define _LCDML_G5                           4
@@ -157,7 +166,8 @@
         private:
             /* Menu Objects */
             LCDMenu *rootMenu;
-            LCDMenu *curMenu;    
+            LCDMenu *curMenu;
+            LCDMenu *activMenu;
             /* Saves the string position from menu elments in flash memory */
             const char * const *flash_table;
             /* display cols */
@@ -203,8 +213,6 @@
             uint8_t menumode; 
             /* save group_hidden_status */
             uint8_t group_en;
-            /* save the last id from a menu element, when a menu elmend is called */
-            uint8_t function;                
             /* save content ids that are displayed currently */
             uint8_t content_id[_LCDML_DISP_cfg_max_rows];        
             /* Constructor */
@@ -227,8 +235,12 @@
             void    Button_quit();
             /* navigate through the menu */
             void    Button_udlr(uint8_t but);
-            /* get active function id */
+            
+            void    resetFunction();
+            /* get active function id */            
             uint8_t getFunction();
+            /* get parameter */
+            uint8_t getFunctionParam();
             /* get the layer where the cursor stands in the menu */
             uint8_t getLayer();
             /* get the corrent cursor position */
