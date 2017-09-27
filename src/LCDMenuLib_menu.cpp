@@ -1,4 +1,7 @@
-/*
+/* ******************************************************************************                                                                        
+ *                        LCDMenuLib (LCDML)                                                                                                       
+ * ****************************************************************************** 
+ *
  * MIT License
  * 
  * Copyright (c) [2017] [Nils Feldkämper]
@@ -20,28 +23,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *                                      
+ * ******************************************************************************
+ *   
+ * BUG / ISSUES REPORTING                                      
+ *    https://github.com/Jomelo/LCDMenuLib/issues 
+ * 
+ * ARDUIONO FORUM                                                    
+ *     http://forum.arduino.cc/index.php?topic=73816.0  
+ *   
+ * ****************************************************************************** 
  */
-
-// ********************************************************************
-//                                                                        
-//                        LCDMenuLib (LCDML)                                
-//                                                                        
-// ********************************************************************
-//
-// Autor:            Nils Feldkaemper                
-// Create:            03.02.2008                                            
-// Edit:            31.07.2016                                            
-// License:            MIT License                                            
-//
-// ********************************************************************
-//
-// error reporting:                                     
-//    https://github.com/Jomelo/LCDMenuLib/issues                            
-//
-// forum thread:                                                    
-//     http://forum.arduino.cc/index.php?topic=73816.0                        
-//
-// ********************************************************************
 
 #include "LCDMenuLib_menu.h"
 
@@ -53,14 +45,15 @@
  *    @return
  *
  * ******************************************************************** */
-LCDMenu::LCDMenu(uint8_t n, uint8_t group)
+LCDMenu::LCDMenu(uint8_t n, uint8_t p_group, uint8_t p_config)
 /* ******************************************************************** */
 {    
-    parent = NULL;
+    parent  = NULL;
     sibling = NULL;
-    child = NULL;
-    name = n;        // element name 
-    disp = group;    // element group
+    child   = NULL;
+    name    = n;            // element name 
+    group   = p_group;      // element group
+    config  = p_config;     // element configuration
 }
 
 

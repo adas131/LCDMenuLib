@@ -1,4 +1,7 @@
-/*
+/* ******************************************************************************                                                                        
+ *                        LCDMenuLib (LCDML)                                                                                                       
+ * ****************************************************************************** 
+ *
  * MIT License
  * 
  * Copyright (c) [2017] [Nils Feldkämper]
@@ -20,28 +23,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *                                      
+ * ******************************************************************************
+ *   
+ * BUG / ISSUES REPORTING                                      
+ *    https://github.com/Jomelo/LCDMenuLib/issues 
+ * 
+ * ARDUIONO FORUM                                                    
+ *     http://forum.arduino.cc/index.php?topic=73816.0  
+ *   
+ * ****************************************************************************** 
  */
- 
-// ********************************************************************
-//                                                                        
-//                        LCDMenuLib (LCDML)                                
-//                                                                        
-// ********************************************************************
-//
-// Autor:            Nils Feldkaemper                
-// Create:            03.02.2008                                            
-// Edit:                23.09.2017                                            
-// License:            MIT License                                            
-//
-// ********************************************************************
-//
-// error reporting:                                     
-//    https://github.com/Jomelo/LCDMenuLib/issues                            
-//
-// forum thread:                                                    
-//     http://forum.arduino.cc/index.php?topic=73816.0                        
-//
-// ********************************************************************
 
 #    include <LCDMenuLib.h>
 
@@ -235,7 +227,7 @@ uint8_t        LCDMenuLib::curloc_correction()
     if ((tmp = curMenu->getChild(0)) != NULL) {
         do
         {
-            if (bitRead(group_en, tmp->disp) || bitRead(control, _LCDML_control_disable_hidden)) {
+            if (bitRead(group_en, tmp->group) || bitRead(control, _LCDML_control_disable_hidden)) {
                 j++;
             }
             else {
@@ -272,7 +264,7 @@ void    LCDMenuLib::goEnter()
                 
                 while ((tmp = tmp->getSibling(1)) != NULL)
                 {
-                    if (bitRead(group_en, tmp->disp) || bitRead(control, _LCDML_control_disable_hidden)) {
+                    if (bitRead(group_en, tmp->group) || bitRead(control, _LCDML_control_disable_hidden)) {
                         j++;
                     }                    
                 }
@@ -353,7 +345,7 @@ uint8_t    LCDMenuLib::countChilds()
     if ((tmp = curMenu->getChild(0)) != NULL) {    
         do
         {                
-            if (bitRead(group_en, tmp->disp) || bitRead(control, _LCDML_control_disable_hidden)) {                
+            if (bitRead(group_en, tmp->group) || bitRead(control, _LCDML_control_disable_hidden)) {                
                 j++;
             } 
         } while ((tmp = tmp->getSibling(1)) != NULL);        
@@ -405,7 +397,7 @@ void    LCDMenuLib::display()
             //show menu structure
             do
             {                
-                if (bitRead(group_en, tmp->disp)) {                     
+                if (bitRead(group_en, tmp->group)) {                     
                     content_id[i-scroll] = tmp->name;
                     i++;                    
                 }

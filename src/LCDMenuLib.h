@@ -1,4 +1,7 @@
-/*
+/* ******************************************************************************                                                                        
+ *                        LCDMenuLib (LCDML)                                                                                                       
+ * ****************************************************************************** 
+ *
  * MIT License
  * 
  * Copyright (c) [2017] [Nils Feldkämper]
@@ -20,93 +23,132 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */ 
+ *                                      
+ * ******************************************************************************
+ *   
+ * BUG / ISSUES REPORTING                                      
+ *    https://github.com/Jomelo/LCDMenuLib/issues 
+ * 
+ * ARDUIONO FORUM                                                    
+ *     http://forum.arduino.cc/index.php?topic=73816.0  
+ *   
+ * ****************************************************************************** 
+ */
 
-/* ******************************************************************** */
-/*                                                                        */
-/*                        LCDMenuLib (LCDML)                                */
-/*                                                                        */
-/* ******************************************************************** */
-/* Autor:            Nils Feldkämper                                        */
-/* Create:            03.02.2008                                            */
-/* Edit:            23.09.2017                                            */
-/* ******************************************************************** */
-/* error reporting (english / german)                                    */
-/*    https://github.com/Jomelo/LCDMenuLib/issues                            */
-/* support (german):                                                    */
-/*     http://forum.arduino.cc/index.php?topic=73816.0                        */
-/* ******************************************************************** */
-
+// File header
 #ifndef LCDMenuLib_h
-#    define LCDMenuLib_h
+    #define LCDMenuLib_h
 
-#    define _LCDML_VERSION                      "LCDML v2.4.0 beta for ESP32"
+    // Version
+    #define _LCDML_VERSION                       "LCDML v2.4.0 beta for ESP32"
 
-/* config */
-#    define _LCDML_DISP_cfg_cursor_deep         6        // save the last position of the cursor until layer xx
-#    define _LCDML_DISP_cfg_max_string_length   20        // max string length witch can be display
-#    define _LCDML_DISP_cfg_max_rows            10
+    // Debug Settings
+    #define _LCDML_DBG                           0
+    #define _LCDML_DBG_DISP                      0
+    #define _LCDML_DBG_BACK                      0
 
+    // Configuration 
+    #define _LCDML_DISP_cfg_cursor_deep          6   // save the last position of the cursor until layer xx
+    #define _LCDML_DISP_cfg_max_string_length    20  // max string length witch can be display
+    #define _LCDML_DISP_cfg_max_rows             10  // max rows which are supported
 
-/* include arduino ios */
-#    include "Arduino.h"
+    // Include arduino ios 
+    #include "Arduino.h"
 
+    // Arduino specific settings
+    #if ARDUINO >= 160
+        #define _LCDMenuLib_arduino_version         1    // for new arduino version like 1.6.0 or higher
+    #else
+        #define _LCDMenuLib_arduino_version         0    // for old arduino version like 1.0.6 or 1.0.5
+    #endif
 
-#if ARDUINO >= 160
-#    define _LCDMenuLib_arduino_version         1    // for new arduino version like 1.6.0 or higher
-#else
-#    define _LCDMenuLib_arduino_version         0    // for old arduino version like 1.0.6 or 1.0.5
-#endif
+    // ESP specific settings
+    #if ( ESP8266 ) || defined ( ESP32 )
+        #define _LCDML_ESP
+    #endif
+    
+    // No function constante 
+    #define _LCDML_NO_FUNC                      255
 
-
-/* define the no function constante */
-#    define _LCDML_NO_FUNC                      255
-
-//button bit pos
-#    define _LCDML_button_free                  7
-#    define _LCDML_button                       6
-#    define _LCDML_button_quit                  5
-#    define _LCDML_button_enter                 4
-#    define _LCDML_button_up                    3
-#    define _LCDML_button_down                  2
-#    define _LCDML_button_left                  1
-#    define _LCDML_button_right                 0
+    // Bit pos buttons
+    #define _LCDML_button_free                  7
+    #define _LCDML_button                       6
+    #define _LCDML_button_quit                  5
+    #define _LCDML_button_enter                 4
+    #define _LCDML_button_up                    3
+    #define _LCDML_button_down                  2
+    #define _LCDML_button_left                  1
+    #define _LCDML_button_right                 0
                                                 
-//control bit pos
-#    define _LCDML_control_menu_back            7
-#    define _LCDML_control_disp_update          6
-#    define _LCDML_control_cursor_update        5
-#    define _LCDML_control_go_root              4
-#    define _LCDML_control_update_direct        3
-#    define _LCDML_control_search_display       2
-#    define _LCDML_control_funcend              1
-#    define _LCDML_control_disable_hidden       0
+    // Bit pos control
+    #define _LCDML_control_menu_back            7
+    #define _LCDML_control_disp_update          6
+    #define _LCDML_control_cursor_update        5
+    #define _LCDML_control_go_root              4
+    #define _LCDML_control_update_direct        3
+    #define _LCDML_control_search_display       2
+    #define _LCDML_control_funcend              1
+    #define _LCDML_control_disable_hidden       0
+    
+    // Bit pos funcmode
+    #define _LCDML_menumode_rollover            7   
 
-// groups
-#    define _LCDML_G8                           7
-#    define _LCDML_G7                           6
-#    define _LCDML_G6                           5
-#    define _LCDML_G5                           4
-#    define _LCDML_G4                           3
-#    define _LCDML_G3                           2
-#    define _LCDML_G2                           1
-#    define _LCDML_G1                           0
+    // Bit position groups
+    #define _LCDML_G8                           7
+    #define _LCDML_G7                           6
+    #define _LCDML_G6                           5
+    #define _LCDML_G5                           4
+    #define _LCDML_G4                           3
+    #define _LCDML_G3                           2
+    #define _LCDML_G2                           1
+    #define _LCDML_G1                           0
 
-/* configure arduino flash lib and load it*/
-#    ifndef __PROG_TYPES_COMPAT__
-#        define __PROG_TYPES_COMPAT__
-#    endif
+    
 
-#    if defined ( ESP8266 ) || defined ( ESP32 )
-#    else
-#        include <avr/pgmspace.h>
-#    endif
+    // Configure arduino flash lib and load it*/
+    #ifndef __PROG_TYPES_COMPAT__
+        #define __PROG_TYPES_COMPAT__
+    #endif
 
-/* include lcd menu lib, this generates the menu items */
-#    include "LCDMenuLib_menu.h"
+    // Include PGMSPACE
+    #ifndef _LCDML_ESP
+        #include <avr/pgmspace.h>
+    #endif
+    
+    
+    #define LCDML_bitCreateVar(var, size) \
+        uint8_t var[((size+1)/7)+1]
+        
+    #define LCDML_bitReadValue(var, bit) \
+        bitRead(var[bit / 7], bit % 7)
+        
+    #define LCDML_bitWriteValue(var, bit, val) \
+        bitWrite(var[bit / 7], bit % 7, val) 
+    
+    
 
-/* include macros for this lib */
-#    include "LCDMenuLib_makros.h"
+    // Include menu class
+    #include "LCDMenuLib_menu.h"
+    
+    
+    #define _LCDML_itemcfg_free2               7
+    #define _LCDML_itemcfg_free                6
+    #define _LCDML_itemcfg_switch              5
+    #define _LCDML_itemcfg_func                4
+    #define _LCDML_itemcfg_para3               3
+    #define _LCDML_itemcfg_para2               2
+    #define _LCDML_itemcfg_para1               1
+    #define _LCDML_itemcfg_para0               0
+
+    // Include macros for this lib 
+    #include "LCDMenuLib_macros_control.h"
+    #include "LCDMenuLib_macros_disp.h"    
+    #include "LCDMenuLib_macros_back.h"
+    #include "LCDMenuLib_macros_messages.h"
+    #include "LCDMenuLib_macros_recursive.h"
+
+    
+  
 
 //# Lcd Menu Lib
 //# =======================
@@ -157,6 +199,8 @@
             uint8_t button;
             /* control bits */
             uint8_t control;
+            /* menumode */
+            uint8_t menumode; 
             /* save group_hidden_status */
             uint8_t group_en;
             /* save the last id from a menu element, when a menu elmend is called */
@@ -195,6 +239,7 @@
             uint8_t getChilds();
             /* get parent */
             uint8_t getParentId();
+            /* get parent id in a specific layer */
             uint8_t getParentId(uint8_t p_layer);
     };
 #endif
