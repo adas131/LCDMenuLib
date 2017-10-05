@@ -10,21 +10,16 @@
  *
  * - every BACKEND function can be stopped and started
  * EXAMPLE CODE:
-    void LCDML_BACK_setup(LCDML_BACKEND_control)
+    void LCDML_BACK_setup(LCDML_BACKEND__your_name)
     {
       // setup
       // is called only if it is started or restartet (reset+start)
-    }
-    
-    void LCDML_BACK_loop(LCDML_BACKEND_control)
+    }    
+    void LCDML_BACK_loop(LCDML_BACKEND__your_name)
     {    
-      // runs in loop
-      
-     
-      return false;  
-    }
-    
-    void LCDML_BACK_stable(LCDML_BACKEND_control)
+      // called in a interval time which is set by initialisation
+    }    
+    void LCDML_BACK_stable(LCDML_BACKEND__your_name)
     {
       // stable stop
       // is called when a backend function is stopped with stopStable  
@@ -36,43 +31,56 @@
 // insert here your own backend functions
 // *********************************************************************
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// *********************************************************************
-// Control Task, DO NOT CHANGE
-// *********************************************************************
-void LCDML_BACK_setup(LCDML_BACKEND_control)      
-// *********************************************************************
+/*
+void LCDML_BACK_setup(LCDML_BACKEND_motor_control)
 {
-  // call setup   
-  LCDML_CONTROL_setup();      
+  // setup
+  // is called only if it is started or restartet (reset+start)
 }
-// backend loop
-void LCDML_BACK_loop(LCDML_BACKEND_control)
+void LCDML_BACK_loop(LCDML_BACKEND_motor_control)
 {    
-  // call loop
-  LCDML_CONTROL_loop();
+  // called in a interval time which is set by initialisation
 }
-// backend stop stable
-void LCDML_BACK_stable(LCDML_BACKEND_control)
+void LCDML_BACK_stable(LCDML_BACKEND_motor_control)
 {
+  // stable stop
+  // is called when a backend function is stopped with stopStable  
 }
 
+
+
+void LCDML_BACK_setup(LCDML_BACKEND_program_1_washing)
+{
+  // setup
+  // is called only if it is started or restartet (reset+start)
+}
+void LCDML_BACK_loop(LCDML_BACKEND_program_1_washing)
+{    
+  // called in a interval time which is set by initialisation
+}
+void LCDML_BACK_stable(LCDML_BACKEND_program_1_washing)
+{
+  // stable stop
+  // is called when a backend function is stopped with stopStable  
+}
+
+
+void LCDML_BACK_setup(LCDML_BACKEND_screensaver)
+{
+  // setup
+  // is called only if it is started or restartet (reset+start)
+}
+void LCDML_BACK_loop(LCDML_BACKEND_screensaver)
+{ 
+  // called in a interval time which is set by initialisation  
+  //LCDML_DISP_jumpToFunc(LCDML_FUNC_screensaver);
+}
+void LCDML_BACK_stable(LCDML_BACKEND_screensaver)
+{
+  // stable stop
+  // is called when a backend function is stopped with stopStable  
+}
+*/
 
 
 // *********************************************************************
@@ -82,60 +90,60 @@ void LCDML_BACK_setup(LCDML_BACKEND_menu)
 // *********************************************************************                            
 {    
   // get current function id                                                                 
-  g_LCDML_BACK_lastFunc = LCDML.getFunction();                     
+  g_LCDML_BACK_lastFunc = LCDML.getFunction();  
   
   // check current running function 
-  if (g_LCDML_DISP_functions_loop_setup[g_LCDML_BACK_lastFunc] == LCDML_FUNC_loop_setup) 
-  {
-    // stop old function if running
-    bitSet(LCDML.control, _LCDML_control_funcend);              
-  }                                                                
-  else if (g_LCDML_BACK_lastFunc != _LCDML_NO_FUNC) 
-  {
+//  if (g_LCDML_DISP_functions_loop_setup[g_LCDML_BACK_lastFunc] == LCDML_FUNC_loop_setup) 
+//  {
+//    // stop old function if running
+//    bitSet(LCDML.control, _LCDML_control_funcend);              
+//  }                                                                
+//  else if (g_LCDML_BACK_lastFunc != _LCDML_NO_FUNC) 
+//  {
     // display new function content              
-    LCDML_lcd_menu_clear();                                        
-    LCDML_BUTTON_resetAll();                                    
-    g_LCDML_DISP_functions_loop_setup[g_LCDML_BACK_lastFunc](); 
-  }                                                                
+    LCDML.MENU_contentClear();                                        
+    LCDML.BT_resetAll();                                    
+//    g_LCDML_DISP_functions_loop_setup[g_LCDML_BACK_lastFunc](); 
+//  }                                                                
 }                                                                   
 void LCDML_BACK_loop(LCDML_BACKEND_menu)                            
-{                                                                    
-  if (LCDML.getFunction() != _LCDML_NO_FUNC) 
-  {
-    g_LCDML_DISP_functions_loop[LCDML.getFunction()]();
-  }
+{   
+  LCDML.FUNC_call();                                                                   
+  //if (LCDML.getFunction() != _LCDML_NO_FUNC) 
+  //{
+  //  g_LCDML_DISP_functions_loop[LCDML.getFunction()]();
+  //}
 }                                                                    
 void LCDML_BACK_stable(LCDML_BACKEND_menu)                            
-{                                                                    
+{                                                                      
   if (g_LCDML_BACK_lastFunc != _LCDML_NO_FUNC) 
   {
     // call loop end function                   
-    g_LCDML_DISP_functions_loop_end[g_LCDML_BACK_lastFunc]();   
+//    g_LCDML_DISP_functions_loop_end[g_LCDML_BACK_lastFunc]();   
     // reset last function
     g_LCDML_BACK_lastFunc = _LCDML_NO_FUNC;                     
     // clear display/console
     LCDML_lcd_menu_clear();                                        
     // display menu
-    LCDML.display();                                               
-    LCDML_lcd_menu_display();  
-    // reset all button values                                 
-    LCDML_BUTTON_resetAll(); 
+    LCDML.display(1);                                               
+    // reset all button values
+    LCDML.BT_resetAll();                                 
     // reset current function                                   
-    LCDML.function = _LCDML_NO_FUNC;                            
+    LCDML.resetFunction();
+                                
     bitClear(LCDML.control, _LCDML_control_funcend);            
     // jump to a function if enabled
-    if(g_lcdml_jump_func != _LCDML_NO_FUNC) {                    
-      LCDML.jumpToElement(g_lcdml_jump_func);                    
-      LCDML_DISP_update_menu();                                 
-      g_lcdml_jump_func = _LCDML_NO_FUNC;                        
-    }
+//    if(g_lcdml_jump_func != _LCDML_NO_FUNC) {                    
+//      LCDML.jumpToElement(g_lcdml_jump_func);                    
+//      LCDML.MENU_contentUpdate();                                 
+//      g_lcdml_jump_func = _LCDML_NO_FUNC;                        
+//    }
     // go root if enabled                                                            
-    if(bitRead(LCDML.control, _LCDML_control_go_root)) {        
-      LCDML.goRoot();                                            
-      LCDML.display();                                        
-      LCDML_lcd_menu_display();                               
-    }                                                            
-  }                                                                
+//    if(bitRead(LCDML.control, _LCDML_control_go_root)) {        
+//      LCDML.goRoot();                                            
+//      LCDML.display(1);                                                                     
+//    }                                                            
+  }                                                               
 }
 
  

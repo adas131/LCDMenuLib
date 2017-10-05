@@ -42,15 +42,40 @@
     // Version
     #define _LCDML_VERSION                       "LCDML v3.0.0 beta for ESP32"
 
-    // Debug Settings
-    #define _LCDML_DBG                           0
-    #define _LCDML_DBG_DISP                      0
-    #define _LCDML_DBG_BACK                      0
-
     // Configuration 
     #define _LCDML_DISP_cfg_cursor_deep          6   // save the last position of the cursor until layer xx
     #define _LCDML_DISP_cfg_max_string_length    20  // max string length witch can be display
     #define _LCDML_DISP_cfg_max_rows             10  // max rows which are supported
+    
+    // Debug Settings
+    #define _LCDML_DBG                           0
+    #define _LCDML_DBG_DISP                      0
+    #define _LCDML_DBG_BACK                      0
+    #define _LCDML_DBG_BUTTON                    0
+    
+    
+    
+    #define lcdml_dbg_println(str)\
+        Serial.println(str)
+        
+    #define lcdml_dbg_print(str)\
+        Serial.println(str)
+    
+    #if (_LCDML_DBG == 1)
+        
+    
+    #else
+        
+    
+    #endif
+    
+    
+    
+    
+    
+    
+    
+    
 
     // Include arduino ios 
     #include "Arduino.h"
@@ -100,7 +125,8 @@
     #define _LCDML_control2_func_return         0
     
     // Bit pos funcmode
-    #define _LCDML_menumode_rollover            7   
+    #define _LCDML_func_setup                   7
+    #define _LCDML_func_stable_end              6
 
     // Bit position groups
     #define _LCDML_HIDE                         7
@@ -112,6 +138,8 @@
     #define _LCDML_G2                           1
     #define _LCDML_G1                           0
 
+    
+    typedef void(* LCDML_FuncPtr)();
     
 
     // Configure arduino flash lib and load it*/
@@ -148,15 +176,22 @@
     #define _LCDML_itemcfg_para2               2
     #define _LCDML_itemcfg_para1               1
     #define _LCDML_itemcfg_para0               0
+    
+    #define _LCDML_reg1_f7               7
+    #define _LCDML_reg1_f6                6
+    #define _LCDML_reg1_f5              5
+    #define _LCDML_reg1_f4                4
+    #define _LCDML_reg1_f3               3
+    #define _LCDML_reg1_f2               2
+    #define _LCDML_reg1_f1               1
+    #define _LCDML_reg1_func_active              0
 
     // Include macros for this lib 
-    #include "LCDMenuLib_macros_control.h"
+    //#include "LCDMenuLib_macros_control.h"
     #include "LCDMenuLib_macros_disp.h"    
     #include "LCDMenuLib_macros_back.h"
     #include "LCDMenuLib_macros_messages.h"
     #include "LCDMenuLib_macros_recursive.h"
-
-    
   
 
 //# Lcd Menu Lib
@@ -168,8 +203,10 @@
             LCDMenu *rootMenu;
             LCDMenu *curMenu;
             LCDMenu *activMenu;
-            /* Saves the string position from menu elments in flash memory */
-            const char * const *flash_table;
+            LCDMenu *tmp;
+            
+            /* */
+            uint8_t reg1;
             /* display cols */
             uint8_t cols;
             /* display rows */
@@ -180,6 +217,8 @@
             uint8_t curloc;            
             /* current scroll position */
             uint8_t scroll;
+            /* save content ids that are displayed currently */
+            uint8_t content_id[_LCDML_DISP_cfg_max_rows+1];   
             /* save the last cursor position when a menue element is called */
             uint8_t cursor_pos;
             /* how many childs exists on next layer */
@@ -202,9 +241,27 @@
             uint8_t selectElementDirect(LCDMenu &p_m, uint8_t p_search);
             /* how many childs exists on next layer */
             uint8_t countChilds();
-        
+                        
+            LCDML_FuncPtr   callback_contentUpdate;     // Update Content            
+            LCDML_FuncPtr   callback_contentClear;      // Clear Content
+            
+            LCDML_FuncPtr   callback_functionTriggerBackend;    // Trigger Backend
+            
+            
+            
+           
+            
+            
 
-        public:
+        public:  
+               
+            /* Constructor */
+            LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols, LCDML_FuncPtr contentUpdate, LCDML_FuncPtr contentClear, LCDML_FuncPtr triggerBackend);
+            
+            
+            // diese variablen privat machen 
+            //todo
+             uint8_t func;
             /* button variable */
             uint8_t button;
             /* control bits */
@@ -213,12 +270,17 @@
             uint8_t menumode; 
             /* save group_hidden_status */
             uint8_t group_en;
-            /* save content ids that are displayed currently */
-            uint8_t content_id[_LCDML_DISP_cfg_max_rows];        
-            /* Constructor */
-            LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols);
+            
+            
+            // set callback in den constructor legen        
+            void MENU_contentUpdate();
+            void MENU_contentClear();
+            
+            void FUNC_triggerBackend();
+            
+            
             /* Display the current menu on the lcd */
-            void    display();
+            void    display(uint8_t update=0);
             /* jump to root menu */
             void    goRoot();
             /* move to the parent menu */
@@ -237,6 +299,9 @@
             void    Button_udlr(uint8_t but);
             
             void    resetFunction();
+            uint8_t    getContentId(uint8_t n);
+            
+            
             /* get active function id */            
             uint8_t getFunction();
             /* get parameter */
@@ -253,6 +318,63 @@
             uint8_t getParentId();
             /* get parent id in a specific layer */
             uint8_t getParentId(uint8_t p_layer);
+            
+            
+            //void setDispUpdateCallback(void *)
+            
+            
+            void BT_resetAll();
+            void BT_resetEnter();
+            void BT_resetUp();
+            void BT_resetDown();
+            void BT_resetLeft();
+            void BT_resetRight();
+            
+            uint8_t BT_checkAny();
+            uint8_t BT_checkEnter();
+            uint8_t BT_checkUp();
+            uint8_t BT_checkDown();
+            uint8_t BT_checkLeft();
+            uint8_t BT_checkRight();
+            
+            void BT_enter();
+            void BT_up();
+            void BT_down();
+            void BT_left();
+            void BT_right();
+            void BT_quit();
+            // Group
+            void GP_display(uint8_t g);
+            void GP_hide(uint8_t g);
+            
+            
+            uint8_t DispUpdate();
+            uint8_t DispUpdateContent();
+            uint8_t DispUpdateCursor();
+            
+            void DispUpdateEnd();
+            
+            
+            uint8_t checkFunctionEnd();
+            
+            
+            void FUNC_call();
+            
+            uint8_t FUNC_setup();
+            uint8_t FUNC_loop();
+            uint8_t FUNC_close();
+            
+            void FUNC_goBackToMenu();
+            
+           
+           
+            // jump functions
+            void goToFunc(uint8_t id);
+            void goToMenu(uint8_t id);
+
+            
+            
+            
     };
 #endif
 

@@ -40,6 +40,8 @@
 
 #   include "Arduino.h"
 
+    typedef void(* LCDML_Menu_FuncPtr)();
+ 
  
     class LCDMenu
     {
@@ -50,19 +52,44 @@
 
             void setParent(LCDMenu &p);                    // Sets the menu's parent to p
             void addSibling(LCDMenu &s,LCDMenu &p);        // Adds a sibling s with parent p.  If the menu already has a sibling, ask that sibling to add it
-
-        public:
-            uint8_t name;                                // Name of this menu
-            uint8_t group;                               // element group (0-7)
-            uint8_t param;                               // element config (0-3 : parameter, 4 = callback function, 5 = switch function, 6-7 free)                               
             
+            uint8_t id;                                 // Name of this menu
+            uint8_t group;                              // element group (0-7)
+            uint8_t param;                              // element config (0-3 : parameter, 4 = callback function, 5 = switch function, 6-7 free)
             
-            LCDMenu(uint8_t n, uint8_t p_group, uint8_t p_config);            // Constructs the menu with a name and a NULL use function (be careful calling it)
+            LCDML_Menu_FuncPtr callback_function;
+            
+        public:            
+            LCDMenu(uint8_t p_id, uint8_t p_group, uint8_t p_param, LCDML_Menu_FuncPtr p_callback_function);            // Constructs the menu with a name and a NULL use function (be careful calling it)
+            
+                        
             
             void addChild(LCDMenu &c);                    // Adds the child c to the menu.  
                                                         // If the menu already has a child, ask the child to add it as a sibling
             LCDMenu * getChild(uint8_t which);            // Returns a pointer to the which'th child of this menu
             LCDMenu * getSibling(uint8_t howfar);        // Returns a pointer to the sibling howfar siblings away from this menu
             LCDMenu * getParent();                        // Returns this menu's parent menu.  If no parent, returns itself
+            
+            uint8_t getID();
+            uint8_t getGroup();
+            uint8_t getParam();
+            
+            void callback();
+            
     };
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 #endif

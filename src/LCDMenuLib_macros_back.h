@@ -382,22 +382,7 @@
         LCDML_DISP_initSetup(_LCDML_DISP_cnt);\
         LCDML_BACK_help_setupInit(N)
 
-
-    // macro: loop function  
-    #define LCDML_run(mode)                                                                                 \
-        if (bitRead(LCDML.control, _LCDML_control_funcend)) {                                               \
-            LCDML_BACK_reset(LCDML_BACKEND_menu);                                                           \
-            LCDML_BACK_dynamic_setDefaultTime(LCDML_BACKEND_menu);                                          \
-            LCDML_BACK_stopStable(LCDML_BACKEND_menu);                                                      \
-        }                                                                                                   \
-        for(uint8_t l_LCDML_BACK_i = 0; l_LCDML_BACK_i<g_LCDML_BACK_cnt;l_LCDML_BACK_i++) {                 \
-            g_LCDML_BACK_priority[(l_LCDML_BACK_i)]();                                                      \
-            if (mode == true && g_LCDML_BACK_loop_status == false)                                          \
-            {                                                                                               \
-                g_LCDML_BACK_loop_status = true;                                                            \
-                break;                                                                                      \
-            }                                                                                               \
-        }
+    
 
         
     

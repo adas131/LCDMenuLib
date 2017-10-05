@@ -3,75 +3,99 @@
  * DISPLAY SYSTEM                                                        *
  *                                                                       *
  * ===================================================================== *
- * every "disp menu function" needs three functions 
- * - void LCDML_DISP_setup(func_name)    
- * - void LCDML_DISP_loop(func_name)     
- * - void LCDML_DISP_loop_end(func_name)
  *
  * EXAMPLE CODE:
     void LCDML_DISP_setup(..menu_func_name..) 
     {
-      // setup
-      // is called only if it is started
-
-      // starts a trigger event for the loop function every 100 millisecounds
-      LCDML_DISP_triggerMenu(100);  
-    }
+      if(LCDML.FUNC_setup()) { // ****** SETUP *********
+        // setup
+        // is called only if it is started
+  
+        // starts a trigger event for the loop function every 100 millisecounds
+        LCDML_DISP_triggerMenu(100); 
+      }     
     
-    void LCDML_DISP_loop(..menu_func_name..)
-    { 
-      // loop
-      // is called when it is triggert
-      // - with LCDML_DISP_triggerMenu( millisecounds ) 
-      // - with every button status change
+      if(LCDML.FUNC_loop()) { // ****** LOOP *********   
+        // loop
+        // is called when it is triggert
+        // - with LCDML_DISP_triggerMenu( millisecounds ) 
+        // - with every button status change
+  
+        // check if any button is presed (enter, up, down, left, right)
+        if(LCDML_BUTTON_checkAny()) {         
+          LCDML.FUNC_goBackToMenu();
+        } 
+      }
 
-      // check if any button is presed (enter, up, down, left, right)
-      if(LCDML_BUTTON_checkAny()) {         
-        LCDML_DISP_funcend();
+      if(LCDML.FUNC_close()) { // ****** STABLE END *********
+        // loop end
+        // this functions is ever called when a DISP function is quit
+        // you can here reset some global vars or do nothing 
       } 
-    }
-    
-    void LCDML_DISP_loop_end(..menu_func_name..)
-    {
-      // loop end
-      // this functions is ever called when a DISP function is quit
-      // you can here reset some global vars or do nothing  
     } 
  * ===================================================================== * 
  */
 
-// *********************************************************************
-void LCDML_DISP_setup(LCDML_FUNC_information)
-// *********************************************************************
-{
-  // setup function
-  Serial.println(F("==========================================="));
-  Serial.println(F("================  FUNC ===================="));
-  Serial.println(F("==========================================="));
- 
-  Serial.println(F("To close this"));  
-  Serial.println(F("function press"));
-  Serial.println(F("any button or use")); 
-  Serial.println(F("back button"));
-}
 
-void LCDML_DISP_loop(LCDML_FUNC_information) 
+
+
+
+
+
+
+
+// *********************************************************************
+void LCDML_FUNC_information()
+// *********************************************************************
 {
-  // loop function, can be run in a loop when LCDML_DISP_triggerMenu(xx) is set
-  // the quit button works in every DISP function without any checks; it starts the loop_end function   
-  if(LCDML_BUTTON_checkAny()) { // check if any button is presed (enter, up, down, left, right)
-    // LCDML_DISP_funcend calls the loop_end function
-    LCDML_DISP_funcend();
+  if(LCDML.FUNC_setup()) {  /* **** SETUP **** */
+    // setup function
+    Serial.println(F("==========================================="));
+    Serial.println(F("================  FUNC ===================="));
+    Serial.println(F("==========================================="));
+   
+    Serial.println(F("To close this"));  
+    Serial.println(F("function press"));
+    Serial.println(F("any button or use")); 
+    Serial.println(F("back button"));
+  }
+
+
+  if(LCDML.FUNC_loop()) { /* **** LOOP **** */
+    // loop function, can be run in a loop when LCDML_DISP_triggerMenu(xx) is set
+    // the quit button works in every DISP function without any checks; it starts the loop_end function   
+    if(LCDML.BT_checkAny()) { // check if any button is presed (enter, up, down, left, right)
+      // LCDML_goToMenu stops a running menu function and goes to the menu
+      LCDML.FUNC_goBackToMenu();
+    }
+  }
+
+
+  if(LCDML.FUNC_close()) { /* **** LOOP END **** */
+    // this functions is ever called when a DISP function is quit
+    // you can here reset some global vars or do nothing 
   } 
 }
 
-void LCDML_DISP_loop_end(LCDML_FUNC_information)
+
+
+
+void LCDML_FUNC_timer_info()
 {
-  // this functions is ever called when a DISP function is quit
-  // you can here reset some global vars or do nothing    
-}  
+}
 
 
+void LCDML_FUNC_back()
+{
+  // is called when it is triggert
+  LCDML.goBack();            // go back
+  LCDML.FUNC_goBackToMenu();      // LCDML_DISP_funcend calls the loop_end function
+}
+
+
+
+
+/*
 // *********************************************************************
 uint8_t g_func_timer_info = 0;  // time counter (global variable)
 unsigned long g_timer_1 = 0;    // timer variable (globale variable)
@@ -101,8 +125,8 @@ void LCDML_DISP_loop(LCDML_FUNC_timer_info)
     Serial.println(g_func_timer_info);  // print the time counter value     
   }
   
-  // reset the initscreen timer
-  LCDML_DISP_resetIsTimer();
+  // if you are using a screensaver, you will reset the waittime here
+  //LCDML_BACK_dynamic_restartTimer(LCDML_BACKEND_screensaver);
   
   // this function can only be ended when quit button is pressed or the time is over
   // check if the function ends normaly
@@ -139,13 +163,18 @@ void LCDML_DISP_loop(LCDML_FUNC_p2)
 {
   // loop function, can be run in a loop when LCDML_DISP_triggerMenu(xx) is set
   // the quit button works in every DISP function without any checks; it starts the loop_end function 
+
+
+  // if you are using a screensaver, you will reset the waittime here
+  //LCDML_BACK_dynamic_restartTimer(LCDML_BACKEND_screensaver);
+
   
-  if (LCDML_BUTTON_checkAny()) // check if any button is pressed (enter, up, down, left, right)
+  if (LCDML.BT_checkAny()) // check if any button is pressed (enter, up, down, left, right)
   {
-    if (LCDML_BUTTON_checkLeft() || LCDML_BUTTON_checkUp()) // check if button left is pressed
+    if (LCDML.BT_checkLeft() || LCDML.BT_checkUp()) // check if button left is pressed
     {
-      LCDML_BUTTON_resetLeft(); // reset the left button
-      LCDML_BUTTON_resetUp(); // reset the left button
+      LCDML.BT_resetLeft(); // reset the left button
+      LCDML.BT_resetUp(); // reset the left button
       g_button_value++;
       
       // update lcd content
@@ -167,3 +196,121 @@ void LCDML_DISP_loop_end(LCDML_FUNC_p2)
   // this functions is ever called when a DISP function is quit
   // you can here reset some global vars or do nothing
 }
+
+
+
+
+void LCDML_DISP_setup(LCDML_FUNC_p1_start) 
+{
+  // setup
+  // is called only if it is started
+
+  // starts a trigger event for the loop function every 100 millisecounds
+  LCDML_DISP_triggerMenu(100);  
+}
+
+void LCDML_DISP_loop(LCDML_FUNC_p1_start)
+{ 
+  // loop
+  // is called when it is triggert
+  // - with LCDML_DISP_triggerMenu( millisecounds ) 
+  // - with every button status change
+
+  // if you are using a screensaver, you will reset the waittime here
+  //LCDML_BACK_dynamic_restartTimer(LCDML_BACKEND_screensaver);
+
+  // check if any button is presed (enter, up, down, left, right)
+  if(LCDML.BT_checkAny()) {         
+    LCDML_DISP_funcend();
+  } 
+}
+
+void LCDML_DISP_loop_end(LCDML_FUNC_p1_start)
+{
+  // loop end
+  // this functions is ever called when a DISP function is quit
+  // you can here reset some global vars or do nothing  
+}
+
+
+
+
+
+
+
+void LCDML_DISP_setup(LCDML_FUNC_screensaver) 
+{
+  // setup
+  // is called only if it is started
+  Serial.println("Screensaver"); 
+
+  // starts a trigger event for the loop function every 100 millisecounds
+  LCDML_DISP_triggerMenu(100);  
+}
+
+void LCDML_DISP_loop(LCDML_FUNC_screensaver)
+{ 
+  // loop
+  // is called when it is triggert
+  // - with LCDML_DISP_triggerMenu( millisecounds ) 
+  // - with every button status change
+
+  // if you are using a screensaver, you will reset the waittime here
+  //LCDML_BACK_dynamic_restartTimer(LCDML_BACKEND_screensaver);
+
+  // check if any button is presed (enter, up, down, left, right)
+  if(LCDML.BT_checkAny()) {         
+    LCDML_DISP_funcend();
+  } 
+}
+
+void LCDML_DISP_loop_end(LCDML_FUNC_screensaver)
+{
+  // loop end
+  // this functions is ever called when a DISP function is quit
+  // you can here reset some global vars or do nothing  
+}
+
+
+
+
+void LCDML_DISP_setup(LCDML_FUNC_initscreen) 
+{
+  // setup
+  // is called only if it is started
+  Serial.println("Initscreen");
+  Serial.println("press any Button to leave this screen");
+  // starts a trigger event for the loop function every 100 millisecounds
+  LCDML_DISP_triggerMenu(100);  
+}
+
+void LCDML_DISP_loop(LCDML_FUNC_initscreen)
+{ 
+  // loop
+  // is called when it is triggert
+  // - with LCDML_DISP_triggerMenu( millisecounds ) 
+  // - with every button status change
+  Serial.println("looop");
+  // if you are using a screensaver, you will reset the waittime here
+  //LCDML_BACK_dynamic_restartTimer(LCDML_BACKEND_screensaver);
+
+  // check if any button is presed (enter, up, down, left, right)
+  if(LCDML.BT_checkAny()) {         
+    LCDML_DISP_funcend();
+    LCDML.goRoot();
+  } 
+}
+
+void LCDML_DISP_loop_end(LCDML_FUNC_initscreen)
+{
+  // loop end
+  // this functions is ever called when a DISP function is quit
+  // you can here reset some global vars or do nothing 
+}
+
+
+
+*/
+
+
+

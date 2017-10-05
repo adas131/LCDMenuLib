@@ -19,10 +19,35 @@
 #define _LCDML_CONTROL_cfg      0  
 
 
+
+
 // therory:
 // "#if" is a preprocessor directive and no error, look here:
 // (english) https://en.wikipedia.org/wiki/C_preprocessor
 // (german)  https://de.wikipedia.org/wiki/C-Pr%C3%A4prozessor
+
+
+// *********************************************************************
+// Control Task, DO NOT CHANGE
+// *********************************************************************
+void LCDML_BACK_setup(LCDML_BACKEND_control)      
+// *********************************************************************
+{
+  // call setup   
+  LCDML_CONTROL_setup();      
+}
+// backend loop
+void LCDML_BACK_loop(LCDML_BACKEND_control)
+{    
+  // call loop
+  LCDML_CONTROL_loop();
+}
+// backend stop stable
+void LCDML_BACK_stable(LCDML_BACKEND_control)
+{
+}
+
+
 
 // *********************************************************************
 // *************** (0) CONTROL OVER SERIAL INTERFACE *******************
@@ -45,16 +70,16 @@ void LCDML_CONTROL_setup()
 void LCDML_CONTROL_loop()
 {
   // check if new serial input is available  
-  if (Serial.available()) {
+  if (Serial.available()) {    
     // read one char from input buffer   
     switch (Serial.read())
     {
-      case _LCDML_CONTROL_serial_enter:  LCDML_BUTTON_enter(); break;
-      case _LCDML_CONTROL_serial_up:     LCDML_BUTTON_up();    break;
-      case _LCDML_CONTROL_serial_down:   LCDML_BUTTON_down();  break;
-      case _LCDML_CONTROL_serial_left:   LCDML_BUTTON_left();  break;
-      case _LCDML_CONTROL_serial_right:  LCDML_BUTTON_right(); break;
-      case _LCDML_CONTROL_serial_quit:   LCDML_BUTTON_quit();  break;
+      case _LCDML_CONTROL_serial_enter:  LCDML.BT_enter(); break;
+      case _LCDML_CONTROL_serial_up:     LCDML.BT_up();    break;
+      case _LCDML_CONTROL_serial_down:   LCDML.BT_down();  break;
+      case _LCDML_CONTROL_serial_left:   LCDML.BT_left();  break;
+      case _LCDML_CONTROL_serial_right:  LCDML.BT_right(); break;
+      case _LCDML_CONTROL_serial_quit:   LCDML.BT_quit();  break;
       default: break;
     } 
   }
@@ -71,6 +96,8 @@ void LCDML_CONTROL_loop()
 // *************** (1) CONTROL OVER ONE ANALOG PIN *********************
 // *********************************************************************
 #elif(_LCDML_CONTROL_cfg == 1)
+
+  unsigned long g_LCDML_DISP_press_time = 0;
 // settings
   #define _LCDML_CONTROL_analog_pin              0
   // when you did not use a button set the value to zero
@@ -123,6 +150,8 @@ void LCDML_CONTROL_loop()
 // *********************************************************************
 #elif(_LCDML_CONTROL_cfg == 2)
 // settings
+  unsigned long g_LCDML_DISP_press_time = 0;
+  
   #define _LCDML_CONTROL_digital_low_active      0    // (0 = low active (pullup), 1 = high active (pulldown) button
                                                       // http://playground.arduino.cc/CommonTopics/PullUpDownResistor
   #define _LCDML_CONTROL_digital_enable_quit     1
@@ -205,6 +234,7 @@ void LCDML_CONTROL_loop()
   #define _LCDML_CONTROL_encoder_high_active     0  // (0 = low active (pullup), 1 = high active (pulldown)) button
                                                       // // http://playground.arduino.cc/CommonTopics/PullUpDownResistor
 // global defines
+  unsigned long g_LCDML_DISP_press_time = 0;
   uint8_t  g_LCDML_CONTROL_encoder_t_prev = 0;
   uint8_t  g_LCDML_CONTROL_encoder_a_prev = 0;
 
@@ -367,6 +397,7 @@ void LCDML_CONTROL_loop()
 // *************** (6) CONTROL OVER JOYSTICK ***************************
 // *********************************************************************
 #elif(_LCDML_CONTROL_cfg == 6)
+  unsigned long g_LCDML_DISP_press_time = 0;
     // settings
     #define _LCDML_CONTROL_analog_pinx A0
     #define _LCDML_CONTROL_analog_piny A1
@@ -421,7 +452,7 @@ void LCDML_CONTROL_loop()
 // *********************************************************************
 
 #elif(_LCDML_CONTROL_cfg == 7)
-
+  unsigned long g_LCDML_DISP_press_time = 0;
   #define PCF8574_1 0x26 // I2C Adresse für die Taster
 
   #define PCF8574_Pin0 254

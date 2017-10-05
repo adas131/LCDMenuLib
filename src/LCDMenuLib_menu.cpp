@@ -45,15 +45,16 @@
  *    @return
  *
  * ******************************************************************** */
-LCDMenu::LCDMenu(uint8_t n, uint8_t p_group, uint8_t p_config)
+LCDMenu::LCDMenu(uint8_t p_id, uint8_t p_group, uint8_t p_param, LCDML_Menu_FuncPtr p_callback_function)
 /* ******************************************************************** */
 {    
     parent  = NULL;
     sibling = NULL;
     child   = NULL;
-    name    = n;            // element name 
-    group   = p_group;      // element group
-    param  = p_config;     // element configuration
+    id      = p_id;        // element name 
+    group   = p_group;     // element group
+    param   = p_param;     // element configuration
+    callback_function = p_callback_function;
 }
 
 
@@ -168,5 +169,27 @@ LCDMenu * LCDMenu::getParent()
     }
     else { // root menu    
         return this;
+    }
+}
+
+
+
+uint8_t LCDMenu::getID()
+{
+    return id;
+}
+
+uint8_t LCDMenu::getGroup() {
+    return group;
+}
+
+uint8_t LCDMenu::getParam() {
+    return param;
+}
+
+void LCDMenu::callback()
+{
+    if(callback_function != NULL) {
+        callback_function();
     }
 }
