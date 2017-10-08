@@ -71,7 +71,9 @@
             const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = {content}
             
         #define LCDML_DISP_getContent(var, id) \
-            strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.getContentId(id)])));
+            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
+                strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]))); \
+            }
                     
         #define LCDML_DISP_createMenu(N)\
             const char * const g_LCDML_DISP_lang_table[] PROGMEM = { LCDML_DISP_lang_repeat(N) }
@@ -95,7 +97,9 @@
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content}
                     
         #define LCDML_DISP_getContent(var, id) \
-            strcpy(var, g_LCDML_DISP_lang_table[LCDML.getContentId(id)])
+            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
+                strcpy(var, g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]); \
+            }
                     
         #define LCDML_DISP_createMenu(N)\
             char * g_LCDML_DISP_lang_table[] = { LCDML_DISP_lang_repeat(N) }
@@ -120,21 +124,21 @@
     //Menu Item Types
     #define LCDML_DISP_addMenu(id, group, parent, child, content) \
         LCDML_LANG_DEF(id, content); \
-        LCDMenu parent ## _ ## child(id, group, 0, NULL); \
+        lcdmlMenuElement parent ## _ ## child(id, group, 0, NULL); \
         void LCDML_DISP_ ## id ## _function() { \
             parent.addChild(parent ## _ ## child); \
         }
     
     #define LCDML_DISP_addFunction(id, group, parent, child, content, callback) \
         LCDML_LANG_DEF(id, content); \
-        LCDMenu parent ## _ ## child(id, group, 0, callback); \
+        lcdmlMenuElement parent ## _ ## child(id, group, 0, callback); \
         void LCDML_DISP_ ## id ## _function() { \
             parent.addChild(parent ## _ ## child); \
         }
         
     #define LCDML_DISP_addFunctionParam(id, group, parent, child, content, callback, param) \
         LCDML_LANG_DEF(id, content); \
-        LCDMenu parent ## _ ## child(id, group, param, callback); \
+        lcdmlMenuElement parent ## _ ## child(id, group, param, callback); \
         void LCDML_DISP_ ## id ## _function() { \
             parent.addChild(parent ## _ ## child); \
         }
@@ -145,7 +149,7 @@
     
     #define LCDML_DISP_initSetup(N)\
         LCDML_DISP_initFunction(N); \
-        LCDML.display(1);
+        LCDML.MENU_display(1);
 
         
     
@@ -155,7 +159,7 @@
                 if(LCDML.getFunction() != _LCDML_NO_FUNC) {\
                     g_lcdml_jump_func = i;\
                 } else {\
-                    LCDML.jumpToElement(i);\
+                    LCDML.MENU_jumpToElement(i);\
                     LCDML_DISP_update_menu(); \
                 }\
                 break;\

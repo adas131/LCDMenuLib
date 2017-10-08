@@ -4,17 +4,11 @@
 //
 // =====================================================================
 
-//Hier weitermachen 
-//Irgenwie einen Callback für das Backend einbinden um diesen Check zu vereinfachen und direkt aus der klasse zu beeinflussen. 
 
-void LCDML_lcd_trigger_backend()
-{
-  LCDML_BACK_startDirect(LCDML_BACKEND_menu);  
-}
 
 
 /* ******************************************************************** */
-void LCDML_lcd_menu_display()
+void menu_display()
 /* ******************************************************************** */
 {
 
@@ -34,25 +28,23 @@ void LCDML_lcd_menu_display()
   char content_text[_LCDML_DISP_cfg_max_string_length]; 
 
 
-  // if you are using a screensaver, you will reset the waittime here
-  //LCDML_BACK_restart(LCDML_BACKEND_screensaver);  
+  
   // init vars
-  uint8_t n_max = (LCDML.getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.getChilds());
+  uint8_t n_max = (LCDML.MENU_getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.MENU_getChilds());
   
   // update content
-  if (LCDML_DISP_update_content() || LCDML_DISP_update_cursor()) {
+  if (LCDML.DISP_chkMenuUpdate() || LCDML.DISP_chkMenuCursorUpdate() ) {
     // clear menu
-    LCDML_lcd_menu_clear();    
+    LCDML.DISP_menuClear();
 
     Serial.println(F("==========================================="));
     Serial.println(F("================  Menu ===================="));
     Serial.println(F("==========================================="));
     // display rows
     for (uint8_t n = 0; n < n_max; n++)
-    {
-      
+    {      
       //set cursor char
-      if (n == LCDML.getCursorPos()) {
+      if (n == LCDML.MENU_getCursorPos()) {
         Serial.print(F("(x) "));          
       } else {
         Serial.print(F("( ) "));
@@ -60,7 +52,7 @@ void LCDML_lcd_menu_display()
       // print content
       // with content id you can add special content to your static menu or replace the content
       // the content_id contains the id wich is set on main tab for a menuitem
-      switch(LCDML.getContentId(n))
+      switch(LCDML.DISP_getMenuContentId(n))
       {         
           //case 0:
           //    Serial.print("special"); // or datetime or other things
@@ -87,11 +79,20 @@ void LCDML_lcd_menu_display()
 
 
 // lcd clear
-void LCDML_lcd_menu_clear()
+void menu_clear()
 {
   for(uint8_t i=0;i<15;i++) {
     Serial.println();
   }
+}
+
+
+//Hier weitermachen 
+//Irgenwie einen Callback für das Backend einbinden um diesen Check zu vereinfachen und direkt aus der klasse zu beeinflussen. 
+
+void trigger_backend()
+{
+  LCDML_BACK_startDirect(LCDML_BACKEND_menu);  
 }
 
 

@@ -20,15 +20,15 @@
 // *********************************************************************
 // Prototypes
 // *********************************************************************
-  void LCDML_lcd_menu_display(); 
-  void LCDML_lcd_menu_clear(); 
-  void LCDML_lcd_trigger_backend();
+  void menu_display(); 
+  void menu_clear(); 
+  void trigger_backend();
 
 // *********************************************************************
 // Objects
 // *********************************************************************
-  LCDMenu LCDML_0 (0, true, 0, NULL); // root menu element (do not change)
-  LCDMenuLib LCDML(LCDML_0, _LCDML_DISP_rows, _LCDML_DISP_cols, LCDML_lcd_menu_display, LCDML_lcd_menu_clear, LCDML_lcd_trigger_backend);
+  lcdmlMenuElement LCDML_0 (0, true, 0, NULL); // root menu element (do not change)
+  LCDMenuLib LCDML(LCDML_0, _LCDML_DISP_rows, _LCDML_DISP_cols, menu_display, menu_clear, trigger_backend);
 
   
 // *********************************************************************
@@ -44,7 +44,7 @@
   // LCDML_0_X_X    => layer 2 
   // LCDML_0_X_X_X  => layer 3 
   // LCDML_0_...      => layer ... 
- 
+
   // LCDMenuLib_add(id, group, prev_layer_element, new_element_num, lang_char_array, callback_function)
   LCDML_DISP_addFunction    (0  , _LCDML_G1   , LCDML_0         , 1  , "Information"   , LCDML_FUNC_information);  // a small function
   LCDML_DISP_addFunction    (1  , _LCDML_G1   , LCDML_0         , 2  , "Time info"     , LCDML_FUNC_timer_info);   // a function which display a secound counter
@@ -116,7 +116,7 @@
   { 
     // lcdml loop control
     // try to change here nothing
-    if (bitRead(LCDML.control, _LCDML_control_funcend)) {                                               
+    if (bitRead(LCDML.funcReg, _LCDML_funcReg_end)) {                                               
       LCDML_BACK_reset(LCDML_BACKEND_menu);                                                           
       LCDML_BACK_dynamic_setDefaultTime(LCDML_BACKEND_menu);                                          
       LCDML_BACK_stopStable(LCDML_BACKEND_menu);                                                      

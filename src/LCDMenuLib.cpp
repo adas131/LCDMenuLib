@@ -35,7 +35,7 @@
  * ****************************************************************************** 
  */
 
-#    include <LCDMenuLib.h>
+#   include "LCDMenuLib.h"
 
 // ********************************************************************
 // constructor
@@ -48,13 +48,14 @@
 // @return
 //        ---
 // ********************************************************************
-LCDMenuLib::LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols, LCDML_FuncPtr contentUpdate, LCDML_FuncPtr contentClear, LCDML_FuncPtr triggerBackend)
+LCDMenuLib::LCDMenuLib(lcdmlMenuElement &p_r, const uint8_t p_rows, const uint8_t p_cols, LCDML_FuncPtr contentUpdate, LCDML_FuncPtr contentClear, LCDML_FuncPtr triggerBackend)
 // ********************************************************************
 {
     // initialisation   
     rootMenu        = &p_r;
     curMenu         = rootMenu;
-    control         = 0; 
+    control         = 0;
+    funcReg         = 0;
     cursor_pos      = 0;
     layer           = 0;
     layer_save[0]   = 0;
@@ -63,11 +64,15 @@ LCDMenuLib::LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols,
     cols            = (p_cols-1); 
     activMenu       = NULL;
     button          = 0;
+    
+
+    BT_resetAll();
 
     callback_contentUpdate          = contentUpdate;     // Update Content            
     callback_contentClear           = contentClear;      // Clear Content
     callback_functionTriggerBackend = triggerBackend;    // Trigger Backend
 }
+
 
 
 
@@ -83,11 +88,11 @@ LCDMenuLib::LCDMenuLib(LCDMenu &p_r, const uint8_t p_rows, const uint8_t p_cols,
  * @return
  *        search status (uint8)
  * ******************************************************************** */
-uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
+uint8_t        LCDMenuLib::MENU_selectElementDirect(lcdmlMenuElement &p_m, uint8_t p_search)
 /* ******************************************************************** */
 {
     //deklaration
-    LCDMenu * search = &p_m;   
+    lcdmlMenuElement * search = &p_m;   
     uint8_t found    = 0;
 
     bitSet(control, _LCDML_control_search_display);
@@ -97,7 +102,7 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
         tmp = search->getChild(0);
             
         if (tmp) {//check elements for childs                    
-            goEnter();                    
+            MENU_goEnter();                    
             
             if (tmp->getID() == p_search) { //search elements in this layer            
                 found = 1;                
@@ -108,7 +113,7 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 //bitClear(reg1, _LCDML_reg1_func_active);            
             }
 
-            found = selectElementDirect(*tmp, p_search); //recursive search until found is true or last item reached
+            found = MENU_selectElementDirect(*tmp, p_search); //recursive search until found is true or last item reached
                         
             if (found == 1) {  //check result
                 //something found
@@ -119,8 +124,11 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 //bitClear(reg1, _LCDML_reg1_func_active);
                 //nothing found
                 //goto next root element
-                goBack();
-                Button_udlr(_LCDML_button_down);                
+                MENU_goBack();
+                if (curloc < child_cnt) { 
+                    curloc++; 
+                    MENU_doScroll();
+                }               
             }                
         } 
         else {            
@@ -135,7 +143,10 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
                 activMenu = NULL;
                 //bitClear(reg1, _LCDML_reg1_func_active);
                 //select next element            
-                Button_udlr(_LCDML_button_down);                
+                if (curloc < child_cnt) { 
+                    curloc++; 
+                    MENU_doScroll();
+                }                
             }
         }        
     } while ((search=search->getSibling(1)) != NULL && found == 0);
@@ -153,29 +164,31 @@ uint8_t        LCDMenuLib::selectElementDirect(LCDMenu &p_m, uint8_t p_search)
  * @param
  * @return
  * ******************************************************************** */
-void        LCDMenuLib::goRoot()
+void        LCDMenuLib::MENU_goRoot()
 /* ******************************************************************** */
 {
     if(activMenu != NULL) 
-    {
-        bitSet(control, _LCDML_control_go_root);
-        Button_quit();
-    } else {
-        bitClear(control, _LCDML_control_go_root);
-        //go back to root layer
-        while(layer > 0) 
-        { 
-            goBack(); 
-        }            
-        cursor_pos = 0;
-        curloc = 0;
-        scroll = 0;
+    {               
+        bitSet(funcReg, _LCDML_funcReg_end);
+        FUNC_call();  // call active function for save close; 
+        activMenu = NULL;
+        
+    } 
+        
+    //go back to root layer
+    while(layer > 0) 
+    { 
+        MENU_goBack(); 
+    }            
+    cursor_pos = 0;
+    curloc = 0;
+    scroll = 0;
+        
+    //reset buttons and cursor position
+    button = 0;
             
-        //reset buttons and cursor position
-        button = 0;
-    }        
     //display menu
-    display();
+    MENU_display();
     bitSet(control, _LCDML_control_disp_update);
     
 }
@@ -186,7 +199,7 @@ void        LCDMenuLib::goRoot()
  *        item name (uint8)
  * @return
  * ******************************************************************** */
-void        LCDMenuLib::jumpToElement(uint8_t p_element)
+void        LCDMenuLib::MENU_jumpToElement(uint8_t p_element)
 /* ******************************************************************** */
 {    
     // check if function is active
@@ -195,15 +208,18 @@ void        LCDMenuLib::jumpToElement(uint8_t p_element)
         if(activMenu->getID() == p_element) {
             return;
         }
-        Button_quit();        
+        
+        bitSet(funcReg, _LCDML_funcReg_end);       
+        
+        FUNC_call();    // call active function for save close;
+        activMenu = NULL;           
     }   
     
-    goRoot();
+    MENU_goRoot();
     bitSet(control, _LCDML_control_disable_hidden);
-    if(selectElementDirect(*rootMenu, p_element)) { //search element
+    if(MENU_selectElementDirect(*rootMenu, p_element)) { //search element
         //open this element
-        goEnter();
-        //Button_enter();
+        MENU_goEnter();
     }
     bitClear(control, _LCDML_control_disable_hidden);
     bitClear(control, _LCDML_control_search_display);
@@ -216,13 +232,13 @@ void        LCDMenuLib::jumpToElement(uint8_t p_element)
  * @param
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::goBack()
+void    LCDMenuLib::MENU_goBack()
 /* ******************************************************************** */
 {    
     if (layer > 0) {     //check layer
         //go back
         bitWrite(control, _LCDML_control_menu_back, 1);
-        goMenu(*curMenu->getParent());
+        MENU_goMenu(*curMenu->getParent());
     }        
 }
 
@@ -233,7 +249,7 @@ void    LCDMenuLib::goBack()
  * @return
  *    correction (uint8)
  * ******************************************************************** */
-uint8_t        LCDMenuLib::curloc_correction()
+uint8_t        LCDMenuLib::MENU_curlocCorrection()
 {
     uint8_t    curloc_cor = 0;
     uint8_t j = 0;
@@ -260,20 +276,20 @@ uint8_t        LCDMenuLib::curloc_correction()
  * @param
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::goEnter()
+void    LCDMenuLib::MENU_goEnter()
 /* ******************************************************************** */
 {
-    LCDMenu *activMenu_tmp;
+    lcdmlMenuElement *activMenu_tmp;
     uint8_t j            = 0;
        
     if (activMenu == NULL) 
     {
         //check if element has childs
 
-        if ((tmp = curMenu->getChild(curloc + curloc_correction())) != NULL) { // check child 
+        if ((tmp = curMenu->getChild(curloc + MENU_curlocCorrection())) != NULL) { // check child 
             activMenu_tmp = tmp;
             
-            goMenu(*tmp);
+            MENU_goMenu(*tmp);
             
             
 
@@ -297,7 +313,7 @@ void    LCDMenuLib::goEnter()
                 activMenu = activMenu_tmp;
                 
 
-                countChilds();
+                MENU_countChilds();
             }          
         }        
     }
@@ -310,7 +326,7 @@ void    LCDMenuLib::goEnter()
  *        pointer to next menu item
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::goMenu(LCDMenu &m)
+void    LCDMenuLib::MENU_goMenu(lcdmlMenuElement &m)
 /* ******************************************************************** */
 {
     //declare variables
@@ -343,13 +359,13 @@ void    LCDMenuLib::goMenu(LCDMenu &m)
                     diff = curloc-(rows-1);
                     for(int i=0; i<diff; i++) 
                     {                        
-                        doScroll();
+                        MENU_doScroll();
                     }
                 }
             }
         }
     }
-    display();    
+    MENU_display();    
 }
 
 
@@ -359,7 +375,7 @@ void    LCDMenuLib::goMenu(LCDMenu &m)
  * @return
  *    sibling count 0 = one 
  * ******************************************************************** */
-uint8_t    LCDMenuLib::countChilds()
+uint8_t    LCDMenuLib::MENU_countChilds()
 /* ******************************************************************** */
 {
     //declaration
@@ -382,25 +398,13 @@ uint8_t    LCDMenuLib::countChilds()
     }
 }
 
-/* ******************************************************************** *
- * private: clear content
- * @param
- * @return
- * ******************************************************************** */
-void LCDMenuLib::display_clear()
-{        
-    for(uint8_t n=0; n<_LCDML_DISP_cfg_max_rows;n++) {
-        content_id[n] = _LCDML_NO_FUNC;
-    }    
-}
-
 
 /* ******************************************************************** *
  * public: display the current menu
  * @param
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::display(uint8_t update)
+void    LCDMenuLib::MENU_display(uint8_t update)
 /* ******************************************************************** */
 {
     //declaration
@@ -408,12 +412,14 @@ void    LCDMenuLib::display(uint8_t update)
     uint8_t maxi = (rows + scroll);
     char buffer[_LCDML_DISP_cfg_max_string_length];
 
-    child_cnt = countChilds();    
+    child_cnt = MENU_countChilds();    
     //check children
     if ((tmp = curMenu->getChild(i))) {
         if (!bitRead(control, _LCDML_control_search_display)) {
-            //clear lcd
-            display_clear();            
+            // clear content list
+            for(uint8_t n=0; n<_LCDML_DISP_cfg_max_rows;n++) {
+                content_id[n] = _LCDML_NO_FUNC;
+            }              
             //show menu structure
             do
             {                
@@ -427,14 +433,14 @@ void    LCDMenuLib::display(uint8_t update)
         }
     }
     else { // no children
-        goBack();
+        MENU_goBack();
         // function can run ...        
         
     }
-    setCursor(); 
+    MENU_setCursor(); 
 
     if(update == 1) {
-        MENU_contentUpdate();
+        DISP_menuUpdate();
     }
 
    
@@ -446,10 +452,10 @@ void    LCDMenuLib::display(uint8_t update)
  * @param
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::setCursor()
+void    LCDMenuLib::MENU_setCursor()
 /* ******************************************************************** */
 {
-    child_cnt = countChilds();    
+    child_cnt = MENU_countChilds();    
 
     //save current cursor position
     cursor_pos = curloc - scroll;
@@ -469,7 +475,7 @@ void    LCDMenuLib::setCursor()
  * @param
  * @return
  * ******************************************************************** */
-void    LCDMenuLib::doScroll()
+void    LCDMenuLib::MENU_doScroll()
 /* ******************************************************************** */
 {    
     //only allow it to go up to menu element   
@@ -481,93 +487,20 @@ void    LCDMenuLib::doScroll()
     if (curloc >= (rows + scroll))
     {
         scroll++;
-        display();
+        MENU_display();
     }
     //scroll up
     else if (curloc < scroll)
     {
         scroll--;
-        display();
+        MENU_display();
     }
     //do not scroll
     else
     {
-        setCursor();
+        MENU_setCursor();
     }
-}
-  
-
-/* ******************************************************************** *
- * public: button enter was pressed, save the state or go in an item
- * @param
- * @return
- * ******************************************************************** */
-void    LCDMenuLib::Button_enter()
-/* ******************************************************************** */
-{ 
-    if(activMenu != NULL) 
-    {            
-        //function is active        
-        bitSet(button, _LCDML_button_enter);
-    }
-    else {
-        //menu is active
-        goEnter();
-    }            
-}
-
-/* ******************************************************************** *
- * public: button quit was pressed
- * @param
- * @return
- * ******************************************************************** */
-void    LCDMenuLib::Button_quit()
-/* ******************************************************************** */
-{
-    if(activMenu != NULL) 
-    {
-        bitSet(control, _LCDML_control_funcend);
-        bitSet(button,  _LCDML_button_quit);
-        activMenu = NULL;
-       
-    } else {
-        goBack();
-    }        
-}
-
-
-/* ******************************************************************** *
- * public: button up down left right were pressed 
- * @param
- *        (u)p (d)own (l)eft (r)ight status (uint8)
- * @return
- * ******************************************************************** */
-void    LCDMenuLib::Button_udlr(uint8_t but)
-/* ******************************************************************** */
-{          
-    if(activMenu == NULL) 
-    {
-        //enable up and down button for menu mode and scroll        
-        switch(but)
-        {
-            case _LCDML_button_up:   if (curloc > 0)         { curloc--; doScroll();} break;
-            case _LCDML_button_down: if (curloc < child_cnt) { curloc++; doScroll();} break;
-        }        
-    }
-    else {
-        bitSet(button, but);
-    }            
-}
-
-
-
-
-void    LCDMenuLib::resetFunction()
-{
-    activMenu = NULL;
-}
-
- 
+} 
 
 /* ******************************************************************** *
  * public: get the name of the active function
@@ -575,7 +508,7 @@ void    LCDMenuLib::resetFunction()
  * @return
  *    active function (uint8)
  * ******************************************************************** */
-uint8_t    LCDMenuLib::getFunction()
+uint8_t    LCDMenuLib::FUNC_getFunction()
 /* ******************************************************************** */
 { 
     if(activMenu != NULL) {
@@ -592,7 +525,7 @@ uint8_t    LCDMenuLib::getFunction()
  * @return
  *    active function (uint8)
  * ******************************************************************** */
-uint8_t    LCDMenuLib::getFunctionParam()
+uint8_t    LCDMenuLib::FUNC_getFunctionParam()
 /* ******************************************************************** */
 {    
     if(activMenu != NULL) {
@@ -611,7 +544,7 @@ uint8_t    LCDMenuLib::getFunctionParam()
  * @return
  *    layer (uint8)
  * ******************************************************************** */
-uint8_t    LCDMenuLib::getLayer()
+uint8_t    LCDMenuLib::MENU_getLayer()
 /* ******************************************************************** */
 {
     return layer;
@@ -624,7 +557,7 @@ uint8_t    LCDMenuLib::getLayer()
  * @return
  *    current corsor position
  * ******************************************************************** */
-uint8_t    LCDMenuLib::getCursorPos()
+uint8_t    LCDMenuLib::MENU_getCursorPos()
 /* ******************************************************************** */
 {    
     return (cursor_pos); //return the current cursor position
@@ -636,10 +569,10 @@ uint8_t    LCDMenuLib::getCursorPos()
  * @return
  *    current corsor position
  * ******************************************************************** */
-uint8_t    LCDMenuLib::getCursorPosAbs()
+uint8_t    LCDMenuLib::MENU_getCursorPosAbs()
 /* ******************************************************************** */
 {    
-    return (curloc + curloc_correction()); //return the current cursor position
+    return (curloc + MENU_curlocCorrection()); //return the current cursor position
 }
 
 
@@ -649,7 +582,7 @@ uint8_t    LCDMenuLib::getCursorPosAbs()
  * @return
  *    child cnt
  * ******************************************************************** */
-uint8_t LCDMenuLib::getChilds()
+uint8_t LCDMenuLib::MENU_getChilds()
 /* ******************************************************************** */
 {
     return child_cnt+1;
@@ -662,7 +595,7 @@ uint8_t LCDMenuLib::getChilds()
  * @return
  *    return the current parent id when the layer is > 0
  * ******************************************************************** */
-uint8_t LCDMenuLib::getParentId()
+uint8_t LCDMenuLib::MENU_getParentId()
 /* ******************************************************************** */
 {
     if(layer > 0 && layer < _LCDML_DISP_cfg_cursor_deep) {
@@ -678,7 +611,7 @@ uint8_t LCDMenuLib::getParentId()
  * @return
  *    return the current parent id when the layer is > 0
  * ******************************************************************** */
-uint8_t LCDMenuLib::getParentId(uint8_t p_layer)
+uint8_t LCDMenuLib::MENU_getParentId(uint8_t p_layer)
 /* ******************************************************************** */
 {
     if(p_layer > 0 && p_layer < _LCDML_DISP_cfg_cursor_deep) {
@@ -688,8 +621,11 @@ uint8_t LCDMenuLib::getParentId(uint8_t p_layer)
     }    
 }
 
+/* ******************************* 
+   DISP_
+ * ******************************* */
 
-uint8_t LCDMenuLib::getContentId(uint8_t n)
+uint8_t LCDMenuLib::DISP_getMenuContentId(uint8_t n)
 {
     if (n < _LCDML_DISP_cfg_max_rows) {
         return content_id[n];
@@ -699,9 +635,9 @@ uint8_t LCDMenuLib::getContentId(uint8_t n)
     
 }
 
-void LCDMenuLib::MENU_contentUpdate()
+void LCDMenuLib::DISP_menuUpdate()
 {    
-    if(activMenu == NULL || bitRead(control, _LCDML_control_funcend) || bitRead(control, _LCDML_control_update_direct)) 
+    if(activMenu == NULL || bitRead(funcReg, _LCDML_funcReg_end) || bitRead(control, _LCDML_control_update_direct)) 
     { 
         callback_contentUpdate();
     }
@@ -710,10 +646,12 @@ void LCDMenuLib::MENU_contentUpdate()
     bitClear(control, _LCDML_control_update_direct);
 }
 
-void LCDMenuLib::MENU_contentClear()
+void LCDMenuLib::DISP_menuClear()
 {
     callback_contentClear();    
 }
+
+
 
 void LCDMenuLib::FUNC_triggerBackend()
 {
@@ -723,29 +661,29 @@ void LCDMenuLib::FUNC_triggerBackend()
     }
 }
 
+uint8_t LCDMenuLib::DISP_chkMenuUpdate()
+{
+    if (bitRead(control, _LCDML_control_disp_update) || bitRead(control, _LCDML_control_update_direct)) { 
+        return true; 
+    } else { 
+        return false; 
+    }
+}
+
+uint8_t LCDMenuLib::DISP_chkMenuCursorUpdate()
+{
+    if(   bitRead(control, _LCDML_control_cursor_update)) { 
+        return true; 
+    } else { 
+        return false;
+    }
+}
 
 
 
-void LCDMenuLib::BT_enter()             { Button_enter();                   MENU_contentUpdate(); FUNC_triggerBackend(); } 
-void LCDMenuLib::BT_up()                { Button_udlr(_LCDML_button_up);    MENU_contentUpdate();  }
-void LCDMenuLib::BT_down()              { Button_udlr(_LCDML_button_down);  MENU_contentUpdate();  }
-void LCDMenuLib::BT_left()              { Button_udlr(_LCDML_button_left);  MENU_contentUpdate();  }
-void LCDMenuLib::BT_right()             { Button_udlr(_LCDML_button_right); MENU_contentUpdate();  }
-void LCDMenuLib::BT_quit()              { Button_quit();                    MENU_contentUpdate();  }
-    
-uint8_t LCDMenuLib::BT_checkAny()       { if((button > 0)) { return true; } else { return false; }                              }     
-uint8_t LCDMenuLib::BT_checkEnter()     { if(bitRead(button, _LCDML_button_enter)) { return true; } else { return false; }      }
-uint8_t LCDMenuLib::BT_checkUp()        { if(bitRead(button, _LCDML_button_up)) { return true; } else { return false; }         }     
-uint8_t LCDMenuLib::BT_checkDown()      { if(bitRead(button, _LCDML_button_down)) { return true; } else { return false; }       }  
-uint8_t LCDMenuLib::BT_checkLeft()      { if(bitRead(button, _LCDML_button_left)) { return true; } else { return false; }       }  
-uint8_t LCDMenuLib::BT_checkRight()     { if(bitRead(button, _LCDML_button_right)) { return true; } else { return false; }      }  
-    
-void LCDMenuLib::BT_resetAll()          { button = 0;}
-void LCDMenuLib::BT_resetEnter()        { bitClear(button, _LCDML_button_enter);    }
-void LCDMenuLib::BT_resetUp()           { bitClear(button, _LCDML_button_up);       }
-void LCDMenuLib::BT_resetDown()         { bitClear(button, _LCDML_button_down);     }
-void LCDMenuLib::BT_resetLeft()         { bitClear(button, _LCDML_button_left);     }
-void LCDMenuLib::BT_resetRight()        { bitClear(button, _LCDML_button_right);    } 
+
+
+
 // Group
 void LCDMenuLib::GP_display(uint8_t g)  { bitSet(group_en, g);                      }
 void LCDMenuLib::GP_hide(uint8_t g)     { bitClear(group_en, g);                    }
@@ -753,7 +691,8 @@ void LCDMenuLib::GP_hide(uint8_t g)     { bitClear(group_en, g);                
 
 void LCDMenuLib::FUNC_call()
 {
-    if(activMenu != NULL) {
+    if(activMenu != NULL) 
+    {
         activMenu->callback();
     }
 }
@@ -763,40 +702,182 @@ uint8_t LCDMenuLib::FUNC_setup()
 {
     if(activMenu != NULL) 
     {
-        // if setup == 1 then 
-    }
-    return 1;
-      
+        // function active 
+        if(bitRead(funcReg, _LCDML_funcReg_setup) == 0) {
+            BT_resetAll();
+            bitSet(funcReg, _LCDML_funcReg_setup); // run setup
+            return true;
+        } 
+        else
+        {
+            return false;
+        }         
+    } 
+    else 
+    {
+        bitClear(funcReg, _LCDML_funcReg_setup);
+        return false; 
+    }      
 }
 uint8_t LCDMenuLib::FUNC_loop()
 {
-    // 
-    return 1;
-    
+    if(activMenu != NULL) 
+    {
+        if(bitRead(funcReg, _LCDML_funcReg_end) == false) {
+            return true;
+        } else {
+            return false;
+        }  
+    }
+    else
+    {
+        return false;
+    }    
 }
 uint8_t LCDMenuLib::FUNC_close()
 {
-    // if function end
-    return 1;
+    if(activMenu != NULL) 
+    {
+        if(bitRead(funcReg, _LCDML_funcReg_end) == true) 
+        {
+            bitClear(funcReg, _LCDML_funcReg_setup);
+            activMenu = NULL;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
 void LCDMenuLib::FUNC_goBackToMenu()
 {
     if(activMenu != NULL) {
-        bitSet(control, _LCDML_control_funcend);
+        bitSet(funcReg, _LCDML_funcReg_end);
+        FUNC_call();  // call active function for save close; 
+        activMenu = NULL;        
     }
+    BT_resetAll();
+    bitClear(funcReg, _LCDML_funcReg_end);
+    bitClear(funcReg, _LCDML_funcReg_setup);
+    DISP_menuClear();
+    MENU_display(1);
 }
 
-void LCDMenuLib::goToFunc(uint8_t id)
+void LCDMenuLib::MENU_goToFunc(uint8_t id)
 {
     
 }
 
-void LCDMenuLib::goToMenu(uint8_t id)
+void LCDMenuLib::MENU_goToMenu(uint8_t id)
 {
     
 }
+
+
+
+
+
+
+
+
+/* ******************************* 
+   BT_
+ * ******************************* */
+
+
+void LCDMenuLib::BT_enter()             
+{ 
+    if(activMenu == NULL) 
+    {            
+        //menu is active
+        MENU_goEnter();
+    }    
+
+    bitSet(button, _LCDML_button_enter);
+    DISP_menuUpdate();    
+    FUNC_triggerBackend(); 
+} 
+
+void LCDMenuLib::BT_up()                
+{ 
+    if(activMenu == NULL) 
+    {
+        if (curloc > 0) { 
+            curloc--; 
+            MENU_doScroll();             
+        }        
+    }
+   
+    bitSet(button, _LCDML_button_up);
+    DISP_menuUpdate();  
+}
+
+void LCDMenuLib::BT_down()              
+{ 
+
+    if(activMenu == NULL) 
+    {
+        if(curloc < child_cnt) { 
+            curloc++; 
+            MENU_doScroll();
+        }                
+    }
+   
+    bitSet(button, _LCDML_button_down);
+    DISP_menuUpdate(); 
+}
+
+void LCDMenuLib::BT_left()              
+{
+    bitSet(button, _LCDML_button_left);
+    DISP_menuUpdate(); 
+}
+
+void LCDMenuLib::BT_right()             
+{ 
+    bitSet(button, _LCDML_button_right);   
+    DISP_menuUpdate(); 
+}
+
+
+void LCDMenuLib::BT_quit()              
+{ 
+    if(activMenu != NULL) 
+    {
+        FUNC_goBackToMenu();       
+    } else {
+        MENU_goBack();
+    } 
+    
+    DISP_menuUpdate(); 
+}
+    
+uint8_t LCDMenuLib::BT_chkAny()       { if((button > 0)) { return true; } else { return false; }                              }     
+
+uint8_t LCDMenuLib::BT_chkEnter()     { if(bitRead(button, _LCDML_button_enter)) { return true; } else { return false; }      }
+uint8_t LCDMenuLib::BT_chkUp()        { if(bitRead(button, _LCDML_button_up)) { return true; } else { return false; }         }     
+uint8_t LCDMenuLib::BT_chkDown()      { if(bitRead(button, _LCDML_button_down)) { return true; } else { return false; }       }  
+uint8_t LCDMenuLib::BT_chkLeft()      { if(bitRead(button, _LCDML_button_left)) { return true; } else { return false; }       }  
+uint8_t LCDMenuLib::BT_chkRight()     { if(bitRead(button, _LCDML_button_right)) { return true; } else { return false; }      }  
+//uint8_t LCDMenuLib::BT_chkQuit()      { if(bitRead(button, _LCDML_button_quit)) { return true; } else { return false; }      }  
+    
+void LCDMenuLib::BT_resetAll()          { button = 0;}
+
+void LCDMenuLib::BT_resetEnter()        { bitClear(button, _LCDML_button_enter);    }
+void LCDMenuLib::BT_resetUp()           { bitClear(button, _LCDML_button_up);       }
+void LCDMenuLib::BT_resetDown()         { bitClear(button, _LCDML_button_down);     }
+void LCDMenuLib::BT_resetLeft()         { bitClear(button, _LCDML_button_left);     }
+void LCDMenuLib::BT_resetRight()        { bitClear(button, _LCDML_button_right);    } 
+//void LCDMenuLib::BT_resetQuit()         { bitClear(button, _LCDML_button_quit);    } 
+
+
+
+
 
 
 
