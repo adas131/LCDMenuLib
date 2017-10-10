@@ -67,7 +67,7 @@ void menu_display()
             break;
       
           default: // static content
-            //Serial.println(n);
+            //Serial.print(n);
             LCDML_DISP_getContent(content_text, n); 
             Serial.print(content_text);
             break;                

@@ -25,9 +25,16 @@
   void trigger_backend();
 
 // *********************************************************************
+// Condetions to show a menu element on the display
+// *********************************************************************
+  boolean COND_shown() { return true; }    // show 
+  boolean COND_hidden() { return false; }  // hidden
+
+// *********************************************************************
 // Objects
 // *********************************************************************
-  lcdmlMenuElement LCDML_0 (0, true, 0, NULL); // root menu element (do not change)
+  lcdmlMenuElement LCDML_0 (255, 0, NULL, NULL); // root menu element (do not change)
+  
   LCDMenuLib LCDML(LCDML_0, _LCDML_DISP_rows, _LCDML_DISP_cols, menu_display, menu_clear, trigger_backend);
 
   
@@ -46,24 +53,24 @@
   // LCDML_0_...      => layer ... 
 
   // LCDMenuLib_add(id, group, prev_layer_element, new_element_num, lang_char_array, callback_function)
-  LCDML_DISP_addFunction    (0  , _LCDML_G1   , LCDML_0         , 1  , "Information"   , LCDML_FUNC_information);  // a small function
-  LCDML_DISP_addFunction    (1  , _LCDML_G1   , LCDML_0         , 2  , "Time info"     , LCDML_FUNC_timer_info);   // a function which display a secound counter
-  LCDML_DISP_addMenu        (2  , _LCDML_G1   , LCDML_0         , 3  , "Settings");
-  LCDML_DISP_addPlaceholder (3  , _LCDML_G1   , LCDML_0_3       , 1);                     // you can find the content in "LCDML_DISP" tab
-  LCDML_DISP_addPlaceholder (4  , _LCDML_G1   , LCDML_0_3       , 2);                     // you can find the content in "LCDML_DISP" tab
-  LCDML_DISP_addFunction    (5  , _LCDML_G1   , LCDML_0_3       , 3  , "Back"          , LCDML_FUNC_back);
-  LCDML_DISP_addMenu        (6  , _LCDML_G1   , LCDML_0         , 4  , "Program");
-  LCDML_DISP_addMenu        (7  , _LCDML_G1   , LCDML_0_4       , 1  , "Program 1");
-  LCDML_DISP_addFunction    (8  , _LCDML_G1   , LCDML_0_4_1     , 1  , "P1 start"      , LCDML_FUNC_back);//LCDML_FUNC_p1_start);
-  LCDML_DISP_addMenu        (9  , _LCDML_G1   , LCDML_0_4_1     , 2  , "Settings");
-  LCDML_DISP_addMenu        (10 , _LCDML_G1   , LCDML_0_4_1_2   , 1  , "Warm");
-  LCDML_DISP_addMenu        (11 , _LCDML_G1   , LCDML_0_4_1_2   , 2  , "Long");
-  LCDML_DISP_addFunction    (12 , _LCDML_G1   , LCDML_0_4_1_2   , 3  , "Back"          , LCDML_FUNC_back);
-  LCDML_DISP_addFunction    (13 , _LCDML_G1   , LCDML_0_4_1     , 3  , "Back"          , LCDML_FUNC_back);
-  LCDML_DISP_addFunction    (14 , _LCDML_G1   , LCDML_0_4       , 2  , "Program 2"     , LCDML_FUNC_back);// LCDML_FUNC_p2);           // a small function to press
-  LCDML_DISP_addFunction    (15 , _LCDML_G1   , LCDML_0_4       , 3  , "Back"          , LCDML_FUNC_back);
-  LCDML_DISP_addFunction    (16 , _LCDML_HIDE , LCDML_0         , 5  , "a"              , LCDML_FUNC_back);// LCDML_FUNC_screensaver);
-  LCDML_DISP_addFunction    (17 , _LCDML_HIDE , LCDML_0         , 6  , "b"              , LCDML_FUNC_back);//LCDML_FUNC_initscreen);         
+  LCDML_DISP_addFunction    (0  , LCDML_0         , 1  , COND_shown,  "Information"   , FUNC_information);  // a small function
+  LCDML_DISP_addFunction    (1  , LCDML_0         , 2  , COND_shown,  "Time info"     , FUNC_timer_info);   // a function which display a secound counter
+  LCDML_DISP_addMenu        (2  , LCDML_0         , 3  , COND_shown,  "Settings");
+  LCDML_DISP_addPlaceholder (3  , LCDML_0_3       , 1  , COND_shown);                     // you can find the content in "LCDML_DISP" tab
+  LCDML_DISP_addPlaceholder (4  , LCDML_0_3       , 2  , COND_shown);                     // you can find the content in "LCDML_DISP" tab
+  LCDML_DISP_addFunction    (5  , LCDML_0_3       , 3  , COND_shown,  "Back"          , FUNC_back);
+  LCDML_DISP_addMenu        (6  , LCDML_0         , 4  , COND_shown,  "Program");
+  LCDML_DISP_addMenu        (7  , LCDML_0_4       , 1  , COND_shown,  "Program 1");
+  LCDML_DISP_addFunction    (8  , LCDML_0_4_1     , 1  , COND_shown,  "P1 start"      , FUNC_back);//LCDML_FUNC_p1_start);
+  LCDML_DISP_addMenu        (9  , LCDML_0_4_1     , 2  , COND_shown,  "Settings");
+  LCDML_DISP_addMenu        (10 , LCDML_0_4_1_2   , 1  , COND_shown,  "Warm");
+  LCDML_DISP_addMenu        (11 , LCDML_0_4_1_2   , 2  , COND_shown,  "Long");
+  LCDML_DISP_addFunction    (12 , LCDML_0_4_1_2   , 3  , COND_shown,  "Back"          , FUNC_back);
+  LCDML_DISP_addFunction    (13 , LCDML_0_4_1     , 3  , COND_shown,  "Back"          , FUNC_back);
+  LCDML_DISP_addFunction    (14 , LCDML_0_4       , 2  , COND_shown,  "Program 2"     , FUNC_back);// LCDML_FUNC_p2);           // a small function to press
+  LCDML_DISP_addFunction    (15 , LCDML_0_4       , 3  , COND_shown,  "Back"          , FUNC_back);
+  LCDML_DISP_addFunction    (16 , LCDML_0         , 5  , COND_hidden, "a"             , FUNC_back);// LCDML_FUNC_screensaver);
+  LCDML_DISP_addFunction    (17 , LCDML_0         , 6  , COND_hidden, "b"             , FUNC_back);//LCDML_FUNC_initscreen);         
   LCDML_DISP_createMenu(_LCDML_DISP_cnt);
 
 
@@ -89,38 +96,18 @@
     // serial init; only be needed if serial control is used     
     Serial.begin(9600);                // start serial    
     Serial.println(F(_LCDML_VERSION)); // only for examples
-          
-    // Enable all items with _LCDML_G1
-    LCDML.GP_display(_LCDML_G1);      
-
+    
     // LCDMenuLib Setup
     LCDML_setup(_LCDML_BACK_cnt);
-
-  
-    
-
-    // Display at first this function:
-    // When you want to see the menu at first, delete this line 
-    // not working at the moment 
-    //LCDML_DISP_jumpToFunc(LCDML_FUNC_initscreen);
-
-
-
-    
   }
 
 // *********************************************************************
 // LOOP
 // *********************************************************************
   void loop()
-  { 
-    // lcdml loop control
-    // try to change here nothing
-    if (bitRead(LCDML.funcReg, _LCDML_funcReg_end)) {                                               
-      LCDML_BACK_reset(LCDML_BACKEND_menu);                                                           
-      LCDML_BACK_dynamic_setDefaultTime(LCDML_BACKEND_menu);                                          
-      LCDML_BACK_stopStable(LCDML_BACKEND_menu);                                                      
-    }                                                                                                   
+  {
+    LCDML.loop();
+                                                                                                       
     for(uint8_t l_LCDML_BACK_i = 0; l_LCDML_BACK_i<g_LCDML_BACK_cnt;l_LCDML_BACK_i++) {                 
       g_LCDML_BACK_priority[(l_LCDML_BACK_i)]();                                                      
       if (_LCDML_priority == true && g_LCDML_BACK_loop_status == false)                                          

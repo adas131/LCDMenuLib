@@ -88,15 +88,13 @@ void LCDML_BACK_stable(LCDML_BACKEND_screensaver)
 // *********************************************************************
 void LCDML_BACK_setup(LCDML_BACKEND_menu) 
 // *********************************************************************                            
-{    
-  // display new function content              
-  LCDML.DISP_menuClear();                                        
-  LCDML.BT_resetAll();                                   
+{   
+   Serial.println("delete backend");                      
                                                               
 }                                                                   
 void LCDML_BACK_loop(LCDML_BACKEND_menu)                            
 {   
-  LCDML.FUNC_call();
+  
 }                                                                    
 void LCDML_BACK_stable(LCDML_BACKEND_menu)                            
 {                                                                                                                                  

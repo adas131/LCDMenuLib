@@ -5,15 +5,18 @@
  * ===================================================================== *
  *
  * EXAMPLE CODE:
-    void LCDML_DISP_setup(..menu_func_name..) 
+    void your_function_name(void) 
     {
       if(LCDML.FUNC_setup()) 
       { // ****** SETUP *********
         // setup
         // is called only if it is started
+        LCDML.DISP_menuClear();                                        
+        LCDML.BT_resetAll();
+        
   
         // starts a trigger event for the loop function every 100 millisecounds
-        LCDML_DISP_triggerMenu(100); 
+        LCDML.FUNC_setTrigger(100); 
       }     
     
       if(LCDML.FUNC_loop()) 
@@ -48,12 +51,15 @@
 
 
 // *********************************************************************
-void LCDML_FUNC_information()
+void FUNC_information(void)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup()) 
   {  /* **** SETUP **** */
     // setup function
+    LCDML.DISP_menuClear();                                        
+    LCDML.BT_resetAll();
+        
     Serial.println(F("==========================================="));
     Serial.println(F("================  FUNC ===================="));
     Serial.println(F("==========================================="));
@@ -87,16 +93,18 @@ void LCDML_FUNC_information()
 
 uint8_t g_func_timer_info = 0;  // time counter (global variable)
 unsigned long g_timer_1 = 0;    // timer variable (globale variable)
-void LCDML_FUNC_timer_info()
+void FUNC_timer_info(void)
 {
   if(LCDML.FUNC_setup()) 
   {  /* **** SETUP **** */
+    LCDML.DISP_menuClear();                                        
+    LCDML.BT_resetAll();
     Serial.println(F("==========================================="));
     Serial.println(F("================  FUNC ===================="));
     Serial.println(F("==========================================="));
     Serial.println(F("wait 10 secounds or press back button"));     
     g_func_timer_info = 10;       // reset and set timer    
-    LCDML_DISP_triggerMenu(100);  // starts a trigger event for the loop function every 100 millisecounds
+    LCDML.FUNC_setTrigger(100);  // starts a trigger event for the loop function every 100 millisecounds
   }
 
 
@@ -108,8 +116,7 @@ void LCDML_FUNC_timer_info()
     // this function is called every 100 millisecounds
     
     // this timer checks every 1000 millisecounds if it is called
-    if((millis() - g_timer_1) >= 1000) {
-      g_timer_1 = millis();   
+    if(LCDML.OTHER_timer_ms(g_timer_1, 1000)) {       
       g_func_timer_info--;                // increment the value every secound
       Serial.println(g_func_timer_info);  // print the time counter value     
     }
@@ -134,9 +141,12 @@ void LCDML_FUNC_timer_info()
 }
 
 
-void LCDML_FUNC_back()
+void FUNC_back(void)
 {
   // is called when it is triggert
+  LCDML.DISP_menuClear();                                        
+  LCDML.BT_resetAll();
+  
   LCDML.MENU_goBack();            // go back
   LCDML.FUNC_goBackToMenu();      // LCDML_DISP_funcend calls the loop_end function
 }
