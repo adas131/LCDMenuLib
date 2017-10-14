@@ -35,7 +35,7 @@
  * ****************************************************************************** 
  */
 
-#include "lcdml_c_menuElement.h"
+#include "LCDMenuLib_menu.h"
 
 
 
@@ -48,7 +48,7 @@
  *    @return
  *
  * ******************************************************************** */
-lcdmlMenuElement::lcdmlMenuElement(uint8_t p_id, uint8_t p_param, LCDML_Menu_FuncPtr p_callback_function, LCDML_Con_FuncPtr p_condetion_function)
+LCDMenuLib_menu::LCDMenuLib_menu(uint8_t p_id, uint8_t p_param, LCDML_Menu_FuncPtr p_callback_function, LCDML_Con_FuncPtr p_condetion_function)
 /* ******************************************************************** */
 {    
     parent  = NULL;
@@ -65,11 +65,11 @@ lcdmlMenuElement::lcdmlMenuElement(uint8_t p_id, uint8_t p_param, LCDML_Menu_Fun
 /* ******************************************************************** *
  * private: set parent to current menu eitem
  *    @param
- *        lcdmlMenuElement (pointer)
+ *        LCDMenuLib_menu (pointer)
  *    @return
  *
  * ******************************************************************** */
-void lcdmlMenuElement::setParent(lcdmlMenuElement &p)
+void LCDMenuLib_menu::setParent(LCDMenuLib_menu &p)
 /* ******************************************************************** */
 {
     parent = &p;
@@ -84,7 +84,7 @@ void lcdmlMenuElement::setParent(lcdmlMenuElement &p)
  *    @return
  *
  * ******************************************************************** */
-void lcdmlMenuElement::addSibling(lcdmlMenuElement &s,lcdmlMenuElement &p)
+void LCDMenuLib_menu::addSibling(LCDMenuLib_menu &s,LCDMenuLib_menu &p)
 /* ******************************************************************** */
 {
     if (sibling) { // add sibling if sibing exists 
@@ -100,11 +100,11 @@ void lcdmlMenuElement::addSibling(lcdmlMenuElement &s,lcdmlMenuElement &p)
 /* ******************************************************************** *
  * public: add a child to current menu
  *    @param
- *        lcdmlMenuElement (pointer)
+ *        LCDMenuLib_menu (pointer)
  *    @return
  *
  * ******************************************************************** */
-void lcdmlMenuElement::addChild(lcdmlMenuElement &c)
+void LCDMenuLib_menu::addChild(LCDMenuLib_menu &c)
 /* ******************************************************************** */
 {
     if (child) { // add sibling if child exists
@@ -124,7 +124,7 @@ void lcdmlMenuElement::addChild(lcdmlMenuElement &c)
  *    @return
  *
  * ******************************************************************** */
-lcdmlMenuElement * lcdmlMenuElement::getChild(uint8_t which)
+LCDMenuLib_menu * LCDMenuLib_menu::getChild(uint8_t which)
 /* ******************************************************************** */
 {
     if (child) { // return child if exists        
@@ -143,7 +143,7 @@ lcdmlMenuElement * lcdmlMenuElement::getChild(uint8_t which)
  *    @return
  *
  * ******************************************************************** */
-lcdmlMenuElement * lcdmlMenuElement::getSibling(uint8_t howfar)
+LCDMenuLib_menu * LCDMenuLib_menu::getSibling(uint8_t howfar)
 /* ******************************************************************** */
 {
     if (howfar == 0) { // this sibling                    
@@ -165,7 +165,7 @@ lcdmlMenuElement * lcdmlMenuElement::getSibling(uint8_t howfar)
  *    @return
  *
  * ******************************************************************** */
-lcdmlMenuElement * lcdmlMenuElement::getParent()
+LCDMenuLib_menu * LCDMenuLib_menu::getParent()
 /* ******************************************************************** */
 {
     if (parent) { // get parent if exists        
@@ -178,12 +178,12 @@ lcdmlMenuElement * lcdmlMenuElement::getParent()
 
 
 
-uint8_t lcdmlMenuElement::getID()
+uint8_t LCDMenuLib_menu::getID()
 {
     return id;
 }
 
-boolean lcdmlMenuElement::chkCondetion()
+boolean LCDMenuLib_menu::chkCondetion()
 {
     if(condetion_function != NULL)
     {
@@ -191,18 +191,27 @@ boolean lcdmlMenuElement::chkCondetion()
     }
     else
     {
-        return false;
+        return true;
     }
 }
 
 
-uint8_t lcdmlMenuElement::getParam() {
+uint8_t LCDMenuLib_menu::getParam() {
     return param;
 }
 
-void lcdmlMenuElement::callback()
+void LCDMenuLib_menu::callback()
 {
     if(callback_function != NULL) {
         callback_function();
+    }
+}
+
+boolean LCDMenuLib_menu::chkCallback()
+{
+    if(callback_function == NULL) {
+        return false;
+    } else {
+        return true;
     }
 }

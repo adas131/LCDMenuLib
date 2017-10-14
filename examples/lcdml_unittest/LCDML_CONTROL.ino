@@ -6,7 +6,7 @@
 // *********************************************************************
 // *********************************************************************
 // content:
-// (0) Control over serial interface
+// (0) Control over serial interface  with asdw_e_q 
 // (1) Control over one analog input 
 // (2) Control over 4 - 6 digital input pins (internal pullups enabled)
 // (3) Control over encoder (internal pullups enabled)
@@ -16,37 +16,12 @@
 // (7) Control over I2C PCF8574
 // *********************************************************************
 
-#define _LCDML_CONTROL_cfg      0  
-
-
-
+#define _LCDML_CONTROL_cfg      0
 
 // therory:
 // "#if" is a preprocessor directive and no error, look here:
 // (english) https://en.wikipedia.org/wiki/C_preprocessor
 // (german)  https://de.wikipedia.org/wiki/C-Pr%C3%A4prozessor
-
-
-// *********************************************************************
-// Control Task, DO NOT CHANGE
-// *********************************************************************
-void LCDML_BACK_setup(LCDML_BACKEND_control)      
-// *********************************************************************
-{
-  // call setup   
-  LCDML_CONTROL_setup();      
-}
-// backend loop
-void LCDML_BACK_loop(LCDML_BACKEND_control)
-{    
-  // call loop
-  LCDML_CONTROL_loop();
-}
-// backend stop stable
-void LCDML_BACK_stable(LCDML_BACKEND_control)
-{
-}
-
 
 
 // *********************************************************************
@@ -61,14 +36,13 @@ void LCDML_BACK_stable(LCDML_BACKEND_control)
   # define _LCDML_CONTROL_serial_right           'd'
   # define _LCDML_CONTROL_serial_quit            'q'
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
+void lcdml_menu_control(void)
 {
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
-{
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+  }
+  
   // check if new serial input is available  
   if (Serial.available()) {    
     // read one char from input buffer   
@@ -84,6 +58,7 @@ void LCDML_CONTROL_loop()
     } 
   }
 }
+
 // *********************************************************************
 // ******************************* END *********************************
 // *********************************************************************
@@ -114,14 +89,13 @@ void LCDML_CONTROL_loop()
   #define _LCDML_CONTROL_analog_right_min        610     // Button Right
   #define _LCDML_CONTROL_analog_right_max        680
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
+
+void lcdml_menu_control(void)
 {
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
-{
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+  }
   // check debounce timer  
   if((millis() - g_LCDML_DISP_press_time) >= 200) {
     g_LCDML_DISP_press_time = millis(); // reset debounce timer
@@ -163,25 +137,24 @@ void LCDML_CONTROL_loop()
   #define _LCDML_CONTROL_digital_left            12
   #define _LCDML_CONTROL_digital_right           13
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
+void lcdml_menu_control(void)
 {
-  // init buttons
-  pinMode(_LCDML_CONTROL_digital_enter      , INPUT_PULLUP);
-  pinMode(_LCDML_CONTROL_digital_up         , INPUT_PULLUP);
-  pinMode(_LCDML_CONTROL_digital_down       , INPUT_PULLUP);  
-  # if(_LCDML_CONTROL_digital_enable_quit == 1)
-    pinMode(_LCDML_CONTROL_digital_quit     , INPUT_PULLUP);
-  # endif
-  # if(_LCDML_CONTROL_digital_enable_lr == 1)
-    pinMode(_LCDML_CONTROL_digital_left     , INPUT_PULLUP);
-    pinMode(_LCDML_CONTROL_digital_right    , INPUT_PULLUP);
-  # endif
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
-{
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+    // init buttons
+    pinMode(_LCDML_CONTROL_digital_enter      , INPUT_PULLUP);
+    pinMode(_LCDML_CONTROL_digital_up         , INPUT_PULLUP);
+    pinMode(_LCDML_CONTROL_digital_down       , INPUT_PULLUP);  
+    # if(_LCDML_CONTROL_digital_enable_quit == 1)
+      pinMode(_LCDML_CONTROL_digital_quit     , INPUT_PULLUP);
+    # endif
+    # if(_LCDML_CONTROL_digital_enable_lr == 1)
+      pinMode(_LCDML_CONTROL_digital_left     , INPUT_PULLUP);
+      pinMode(_LCDML_CONTROL_digital_right    , INPUT_PULLUP);
+    # endif
+  }
+  
   #if(_LCDML_CONTROL_digital_low_active == 1)
   #  define _LCDML_CONTROL_digital_a !
   #else
@@ -237,23 +210,21 @@ void LCDML_CONTROL_loop()
   unsigned long g_LCDML_DISP_press_time = 0;
   uint8_t  g_LCDML_CONTROL_encoder_t_prev = 0;
   uint8_t  g_LCDML_CONTROL_encoder_a_prev = 0;
-
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
+void lcdml_menu_control(void)
 {
-  // set encoder update intervall time 
-  LCDML_BACK_dynamic_setLoopTime(LCDML_BACKEND_control, 1000UL);  // 1000us 
-
-  // init pins  
-  pinMode(_LCDML_CONTROL_encoder_pin_a      , INPUT_PULLUP);
-  pinMode(_LCDML_CONTROL_encoder_pin_b      , INPUT_PULLUP);
-  pinMode(_LCDML_CONTROL_encoder_pin_button , INPUT_PULLUP); 
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
-{    
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+    // set encoder update intervall time 
+    //LCDML_BACK_dynamic_setLoopTime(LCDML_BACKEND_control, 1000UL);  // 1000us 
+  
+    // init pins  
+    pinMode(_LCDML_CONTROL_encoder_pin_a      , INPUT_PULLUP);
+    pinMode(_LCDML_CONTROL_encoder_pin_b      , INPUT_PULLUP);
+    pinMode(_LCDML_CONTROL_encoder_pin_button , INPUT_PULLUP); 
+  }
+  
   // read encoder status
   unsigned char a = digitalRead(_LCDML_CONTROL_encoder_pin_a);
   unsigned char b = digitalRead(_LCDML_CONTROL_encoder_pin_b);
@@ -318,14 +289,12 @@ void LCDML_CONTROL_loop()
 // objects
   Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, _LCDML_CONTROL_keypad_rows, _LCDML_CONTROL_keypad_cols );
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
+void lcdml_menu_control(void)
 {
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
-{    
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+  }
   char key = kpd.getKey();
   if(key)  // Check for a valid key.
   {
@@ -357,35 +326,34 @@ void LCDML_CONTROL_loop()
     // ir objects
     IRrecv irrecv(RECV_PIN);
     decode_results results;
-  
+
 // *********************************************************************
-// setup (nothing change here)
-void LCDML_CONTROL_setup()
-{
-    irrecv.enableIRIn(); // Start the receiver
-}
-// *********************************************************************
-// loop
 // change in this function the ir values to your values
-void LCDML_CONTROL_loop()
-{  
-    if (irrecv.decode(&results))
-    {
-        // comment this line out, to check the correct code 
-        //Serial.println(results.value, HEX);
-    
-        // in this switch case you have to change the value 0x...1 to the correct ir code
-        switch (results.value)
-        {
-            case 0x00000001: LCDML_BUTTON_enter(); break;  
-            case 0x00000002: LCDML_BUTTON_up();    break;
-            case 0x00000003: LCDML_BUTTON_down();  break;
-            case 0x00000004: LCDML_BUTTON_left();  break;
-            case 0x00000005: LCDML_BUTTON_right(); break;
-            case 0x00000006: LCDML_BUTTON_quit();  break;
-            default: break;       
-        }
-    } 
+void lcdml_menu_control(void)
+{
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+    irrecv.enableIRIn(); // Start the receiver
+  }
+  
+  if (irrecv.decode(&results))
+  {
+      // comment this line out, to check the correct code 
+      //Serial.println(results.value, HEX);
+  
+      // in this switch case you have to change the value 0x...1 to the correct ir code
+      switch (results.value)
+      {
+          case 0x00000001: LCDML_BUTTON_enter(); break;  
+          case 0x00000002: LCDML_BUTTON_up();    break;
+          case 0x00000003: LCDML_BUTTON_down();  break;
+          case 0x00000004: LCDML_BUTTON_left();  break;
+          case 0x00000005: LCDML_BUTTON_right(); break;
+          case 0x00000006: LCDML_BUTTON_quit();  break;
+          default: break;       
+      }
+  } 
 }
 // *********************************************************************
 // ******************************* END *********************************
@@ -413,35 +381,32 @@ void LCDML_CONTROL_loop()
     #define _LCDML_CONTROL_analog_right_min 0 // Button Right
     #define _LCDML_CONTROL_analog_right_max 412
 // *********************************************************************
-// setup
-void LCDML_CONTROL_setup()
-{    
-    pinMode (_LCDML_CONTROL_digitalread, INPUT);
-}
-// *********************************************************************
-// loop
-void LCDML_CONTROL_loop()
+void lcdml_menu_control(void)
 {
-    // check debounce timer
-    if((millis() - g_LCDML_DISP_press_time) >= 200) {
-        g_LCDML_DISP_press_time = millis(); // reset debounce timer
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+    pinMode (_LCDML_CONTROL_digitalread, INPUT);
+  }
+  // check debounce timer
+  if((millis() - g_LCDML_DISP_press_time) >= 200) {
+    g_LCDML_DISP_press_time = millis(); // reset debounce timer
 
-        uint16_t valuex = analogRead(_LCDML_CONTROL_analog_pinx);  // analogpinx
-        uint16_t valuey = analogRead(_LCDML_CONTROL_analog_piny);  // analogpinx
-        uint16_t valuee = digitalRead(_LCDML_CONTROL_digitalread);  //digitalpinenter
+    uint16_t valuex = analogRead(_LCDML_CONTROL_analog_pinx);  // analogpinx
+    uint16_t valuey = analogRead(_LCDML_CONTROL_analog_piny);  // analogpinx
+    uint16_t valuee = digitalRead(_LCDML_CONTROL_digitalread);  //digitalpinenter
 
-        
-        if (valuey >= _LCDML_CONTROL_analog_up_min && valuey <= _LCDML_CONTROL_analog_up_max) { LCDML_BUTTON_up(); }        // up
-        if (valuey >= _LCDML_CONTROL_analog_down_min && valuey <= _LCDML_CONTROL_analog_down_max) { LCDML_BUTTON_down(); }    // down
-        if (valuex >= _LCDML_CONTROL_analog_left_min && valuex <= _LCDML_CONTROL_analog_left_max) { LCDML_BUTTON_left(); }     // left
-        if (valuex >= _LCDML_CONTROL_analog_right_min && valuex <= _LCDML_CONTROL_analog_right_max) { LCDML_BUTTON_right(); }    // right
-        
-        if(valuee == true) {LCDML_BUTTON_enter();}    // enter
+    
+    if (valuey >= _LCDML_CONTROL_analog_up_min && valuey <= _LCDML_CONTROL_analog_up_max) { LCDML_BUTTON_up(); }        // up
+    if (valuey >= _LCDML_CONTROL_analog_down_min && valuey <= _LCDML_CONTROL_analog_down_max) { LCDML_BUTTON_down(); }    // down
+    if (valuex >= _LCDML_CONTROL_analog_left_min && valuex <= _LCDML_CONTROL_analog_left_max) { LCDML_BUTTON_left(); }     // left
+    if (valuex >= _LCDML_CONTROL_analog_right_min && valuex <= _LCDML_CONTROL_analog_right_max) { LCDML_BUTTON_right(); }    // right
+    
+    if(valuee == true) {LCDML_BUTTON_enter();}    // enter
 
-        // back buttons have to be included as menuitem 
-        // lock at the examle LCDML_back_button
-
-    }
+    // back buttons have to be included as menuitem 
+    // lock at the examle LCDML_back_button
+  }
 }
 // *********************************************************************
 // ******************************* END *********************************
@@ -474,10 +439,13 @@ void LCDML_CONTROL_loop()
   #define _LCDML_CONTROL_PCF8574l_right         PCF8574_Pin2
   #define _LCDML_CONTROL_PCF8574_quit           PCF8574_Pin2
 // **********************************************************
-// setup * loop
-void LCDML_CONTROL_setup(){}
-void LCDML_CONTROL_loop()
-{     
+void lcdml_menu_control(void)
+{
+  // If something must init, put in in the setup condition
+  if(LCDML.BT_setup()) {
+    // runs only once
+  }
+        
   if((millis() - g_LCDML_DISP_press_time) >= 200) {
       g_LCDML_DISP_press_time = millis(); // reset press time
 

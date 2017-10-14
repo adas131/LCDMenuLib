@@ -35,8 +35,8 @@
  * ****************************************************************************** 
  */
  
-#ifndef _LCDML_macros_recursive_h
-    #define _LCDML_macros_recursive_h
+#ifndef _LCDML_macros_h
+    #define _LCDML_macros_h
     
     /* ------------------ 
      * Include Arduino IOS                                                     
@@ -44,6 +44,432 @@
      */
     #include <Arduino.h>
     
+    
+    /* ------------------ 
+     * DISP / MENU                                                      
+     * ------------------
+     */
+         
+    // get global language variable for name xyz 
+    #define LCDML_DISP_lang(name)           g_LCDML_DISP_lang_ ## name ## _var
+    
+    // call repeat of function 
+    #define LCDML_DISP_initFunction(N)      LCDML_DISP_func_repeat(N);
+     
+    #ifndef _LCDML_ESP
+        // stored in flash (arduino) 
+        #define LCDML_LANG_DEF(name, content) \
+            const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = {content}
+            
+        #define LCDML_getContent(var, id) \
+            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
+                strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]))); \
+            }
+                    
+        #define LCDML_createMenu(N)\
+            const char * const g_LCDML_DISP_lang_table[] PROGMEM = { LCDML_DISP_lang_repeat(N) }
+          
+        #define LCDML_getElementName(var, element_id) \
+            if(element_id != _LCDML_NO_FUNC && (sizeof(g_LCDML_DISP_lang_table)-1) >= element_id) {\
+                strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[element_id])));\
+            }
+          
+    #else
+        // stored in ram (esp)
+        #define LCDML_LANG_DEF(name, content) \
+            char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content}
+                    
+        #define LCDML_getContent(var, id) \
+            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
+                strcpy(var, g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]); \
+            }
+                    
+        #define LCDML_createMenu(N)\
+            char * g_LCDML_DISP_lang_table[] = { LCDML_DISP_lang_repeat(N) }
+           
+
+        #define LCDML_getElementName(var, element_id) \
+            if(element_id != _LCDML_NO_FUNC && (sizeof(g_LCDML_DISP_lang_table)-1) >= element_id) {\
+                strcpy_P(var, (char*)(g_LCDML_DISP_lang_table[element_id]));\
+            }
+            
+    #endif    
+    
+         
+    //Menu Item Types
+        
+    #define LCDML_add(id, parent, child, group, content, dyncallback, callback, param) \
+        LCDML_LANG_DEF(id, content); \
+        LCDMenuLib_menu parent ## _ ## child(id, param, callback, group ); \
+        void LCDML_DISP_ ## id ## _function() { \
+            parent.addChild(parent ## _ ## child); \
+        }
+        
+    
+    #define LCDML_setup(N)\
+        LCDML_DISP_initFunction(N); \
+        LCDML.MENU_display(); \
+        LCDML.DISP_menuUpdate()    
+        
+        
+        
+        
+// ----------------------------------------
+// define loop modes
+// ----------------------------------------
+    #define     _LCDBL_no_priority          0
+    #define     _LCDBL_priority             1
+    
+    #define     _LCDBL_stop                 0
+    #define     _LCDBL_start                1
+    #define     _LCDBL_startDirect          2
+    #define     _LCDBL_stable               3
+    
+    #define     _LCDBL_root                 0
+    #define     _LCDBL_next                 1
+    
+    #define     _LCDBL_ms                   0
+    #define     _LCDBL_us                   1
+
+    #define     _LCDBL_BACK_default_id      255        
+
+// ----------------------------------------
+// Generation of function names
+// ----------------------------------------
+    // macro: setup function
+    #define LCDBL_BACK_setup(name)\
+        LCDBL_BACK_setup_##name(void)
+    // macro: loop function
+    #define LCDBL_BACK_loop(name)\
+        LCDBL_BACK_loop_##name(void)
+    // macro: stableState function
+    #define LCDBL_BACK_stable(name)\
+        LCDBL_BACK_stable_##name(void)
+
+// init thread system
+    // macro: creates the LCDBL_BACK name pointer on a function
+    #define LCDBL_BACK(name)\
+        LCDBL_BACK_function_##name
+    // macro: creates the LCDBL_BACK managemand variables
+    
+
+        
+// ----------------------------------------
+// Initialisation
+// ----------------------------------------        
+        
+    #ifndef _LCDBL_ESP
+        // stored in flash (arduino)
+        #define LCDBL_BACK_H_cnt() \
+            const PROGMEM uint8_t g_LCDBL_BACK_cnt = _LCDBL_BACK_cnt+1
+            
+        #define LCDBL_BACK_H_id(id, name) \
+            const PROGMEM uint8_t g_LCDBL_BACK_id__##name  = id
+            
+        #define LCDBL_BACK_H_time(name, init_time) \
+            const PROGMEM uint32_t   _LCDBL_BACK_time_default__##name  = (uint32_t)(init_time)            
+    #else
+        // stored in ram (esp)
+        #define LCDBL_BACK_H_cnt() \
+            const uint8_t g_LCDBL_BACK_cnt = _LCDBL_BACK_cnt+1
+            
+        #define LCDBL_BACK_H_id(id, name) \
+            const uint8_t g_LCDBL_BACK_id__##name  = id
+            
+        #define LCDBL_BACK_H_time(name, init_time) \
+            const uint32_t   _LCDBL_BACK_time_default__##name  = (uint32_t)(init_time)
+    
+    #endif        
+    
+
+    #define LCDBL_BACK_init()\
+        LCDBL_FuncPtr g_LCDBL_BACK_priority[_LCDBL_BACK_cnt+1];\
+        LCDBL_BACK_H_cnt(); \
+        LCDBL_bitCreateVar(g_LCDBL_BACK_start_stop, _LCDBL_BACK_cnt);\
+        LCDBL_bitCreateVar(g_LCDBL_BACK_reset, _LCDBL_BACK_cnt);\
+        LCDBL_bitCreateVar(g_LCDBL_BACK_mil_mic, _LCDBL_BACK_cnt);\
+        LCDBL_bitCreateVar(g_LCDBL_BACK_ret, _LCDBL_BACK_cnt);\
+        uint8_t g_LCDBL_BACK_loop_status = true;\
+        uint8_t g_LCDBL_BACK_lastFunc = _LCDBL_NO_FUNC;\
+        unsigned long g_LCDBL_BACK_timer[(_LCDBL_BACK_cnt+1)];\
+        void LCDBL_CONTROL_setup();\
+        void LCDBL_CONTROL_loop()
+
+// ----------------------------------------
+// Create threads
+// ----------------------------------------        
+        
+    // thread create
+    // macro: help to create a new thread: generate weak functions
+    #define LCDBL_BACK_help_new_thread(id, name, status, time_type, ret)\
+        LCDBL_BACK_H_id(id, name); \
+        void LCDBL_BACK_setup_##name(void);\
+        void LCDBL_BACK_loop_##name(void);\
+        void LCDBL_BACK_stable_##name(void);\
+        void LCDBL_BACK_function_##name(void);\
+        void LCDBL_BACK_setupInit_##id(void){ \
+            g_LCDBL_BACK_priority[id] = LCDBL_BACK_function_##name;\
+            LCDBL_bitWriteValue(g_LCDBL_BACK_mil_mic, id, time_type); \
+            LCDBL_bitWriteValue(g_LCDBL_BACK_ret, id, ret); \
+            if(status == _LCDBL_start) {\
+                LCDBL_BACK_start(name);\
+            } else if(status == _LCDBL_startDirect) { \
+                LCDBL_BACK_startDirect(name); \
+            } else if(status == _LCDBL_stop) { \
+                LCDBL_BACK_stopStable(name); \
+            }\
+        }
+        
+    // macro: create a new thread with dynamc times
+    #define LCDBL_BACK_new_timebased_dynamic(id, init_time, time_type, status, ret, name)\
+        LCDBL_BACK_help_new_thread(id, name, status, time_type, ret);\
+        LCDBL_BACK_H_time(name, init_time); \
+        unsigned long g_LCDBL_BACK_dynTime_##name = (uint32_t)(init_time); \
+        LCDBL_BACK_THREAD_FUNCTION_TIME_BASED(name, g_LCDBL_BACK_dynTime_##name);          
+        
+    // macro: create a new thread with static times
+    #define LCDBL_BACK_new_timebased_static(id, init_time, time_type, status, ret, name)\
+        LCDBL_BACK_help_new_thread(id, name, status, time_type, ret);\
+        LCDBL_BACK_THREAD_FUNCTION_TIME_BASED(name, init_time);
+        
+
+    // macro: create a event based thread
+    #define LCDBL_BACK_new_eventbased(id, name)\
+        LCDBL_BACK_help_new_thread(id, name, false, false, false);\
+        LCDBL_BACK_THREAD_FUNCTION_EVENT_BASED(name);        
+
+
+// ----------------------------------------
+// Timebased control
+// ----------------------------------------
+    // macro: thread start single
+    #define LCDBL_BACK_start(name)\
+        LCDBL_bitWriteValue(g_LCDBL_BACK_start_stop, g_LCDBL_BACK_id__##name, true)
+        
+    #define LCDBL_BACK_startDirect(name)\
+        LCDBL_BACK_dynamic_timeToZero(name);\
+        LCDBL_bitWriteValue(g_LCDBL_BACK_start_stop, g_LCDBL_BACK_id__##name, true)
+
+    // macro: thread stop
+    #define LCDBL_BACK_stop(name)\
+        LCDBL_bitWriteValue(g_LCDBL_BACK_start_stop, g_LCDBL_BACK_id__##name, false) 
+        
+    // macro: thread stop stable => calls a function at the end
+    #define LCDBL_BACK_stopStable(name)\
+        LCDBL_BACK_stop(name);\
+        LCDBL_BACK_stable_##name()
+        
+    // macro: thread reset
+    #define LCDBL_BACK_reset(name)\
+        LCDBL_bitWriteValue(g_LCDBL_BACK_reset, g_LCDBL_BACK_id__##name, false); \
+        LCDBL_BACK_dynamic_restartTimer(name)
+            
+    //macro: thread reStart 
+    #define LCDBL_BACK_restart(name)\
+        LCDBL_BACK_reset(name);\
+        LCDBL_BACK_start(name)
+        
+    #define LCDBL_BACK_restartDirect(name)\
+        LCDBL_BACK_reset(name);\
+        LCDBL_BACK_startDirect(name)
+
+// ----------------------------------------
+// Event control
+// ----------------------------------------
+    #define LCDBL_BACK_event_start(name)\
+        LCDBL_BACK_start(name)
+    #define LCDBL_BACK_event_reset(name)\
+        LCDBL_BACK_reset(name)
+    #define LCDBL_BACK_event_restart(name)\
+        LCDBL_BACK_restart(name)
+
+// ----------------------------------------
+// All Taks
+// ----------------------------------------
+    // macro: thread start all
+    #define LCDBL_BACK_all_start()\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<g_LCDBL_BACK_cnt;l_LCDBL_BACK_i++) { \
+            LCDBL_bitWriteValue(g_LCDBL_BACK_start_stop, l_LCDBL_BACK_i, true); \
+        }
+    // macro: thread stop all
+    #define LCDBL_BACK_all_stop()\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<g_LCDBL_BACK_cnt;l_LCDBL_BACK_i++) { \
+            LCDBL_bitWriteValue(g_LCDBL_BACK_start_stop, l_LCDBL_BACK_i, false); \
+        }
+    // macro: thread reset all
+    #define LCDBL_BACK_all_reset()\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<g_LCDBL_BACK_cnt;l_LCDBL_BACK_i++) { \
+            LCDBL_bitWriteValue(g_LCDBL_BACK_reset, l_LCDBL_BACK_i, false); \
+        }
+    //macro: thread reStart all 
+    #define LCDBL_BACK_all_restart()\
+        LCDBL_BACK_all_reset();\
+        LCDBL_BACK_all_start()
+
+// ----------------------------------------
+// Group Markos
+// ----------------------------------------
+    // macro: add group elements
+    #define LCDBL_BACK_group(name)\
+        {g_LCDBL_BACK_id__##name/7, g_LCDBL_BACK_id__##name%7} 
+    // macro: create a new group
+    #define LCDBL_BACK_group_init(name, thread_cnt)\
+        uint8_t g_LCDBL_BACK_group__##name##_cnt = thread_cnt;\
+        uint8_t g_LCDBL_BACK_group__##name[thread_cnt][2] = 
+    // macro: thread start group
+    #define LCDBL_BACK_group_start(group_name)\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<(g_LCDBL_BACK_group__##group_name##_cnt);l_LCDBL_BACK_i++) {\
+            bitWrite(g_LCDBL_BACK_start_stop[g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][0]], g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][1], true);\
+        }
+    // macro: thread stop group
+    #define LCDBL_BACK_group_stop(group_name)\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<(g_LCDBL_BACK_group__##group_name##_cnt);l_LCDBL_BACK_i++) {\
+            bitWrite(g_LCDBL_BACK_start_stop[g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][0]], g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][1], false);\
+        }
+    // macro: thread reset group
+    #define LCDBL_BACK_group_reset(group_name)\
+        for(uint8_t l_LCDBL_BACK_i = 0; l_LCDBL_BACK_i<(g_LCDBL_BACK_group__##group_name##_cnt);l_LCDBL_BACK_i++) {\
+            bitWrite(g_LCDBL_BACK_reset[g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][0]], g_LCDBL_BACK_group__##group_name[l_LCDBL_BACK_i][1], false);\
+        }
+    // macro: thread start group
+    #define LCDBL_BACK_group_restart(group_name)\
+        LCDBL_BACK_group_reset(group_name);\
+        LCDBL_BACK_group_start(group_name)
+    
+
+
+
+
+// ----------------------------------------
+// Check thread state
+// ----------------------------------------
+    //macro: thread is running ? 
+    #define LCDBL_BACK_isRun(name)\
+        LCDBL_bitReadValue(g_LCDBL_BACK_start_stop, g_LCDBL_BACK_id__##name)
+    
+// ----------------------------------------    
+// Dynamic times    
+// ----------------------------------------
+    //macro: edit thread loop time
+    #define LCDBL_BACK_dynamic_setLoopTime(name, time)\
+        g_LCDBL_BACK_dynTime_##name = time
+        
+    //macro: get thread loop time
+    #define LCDBL_BACK_dynamic_getLoopTime(name)\
+        g_LCDBL_BACK_dynTime_##name  
+        
+    // macro: reset a dynamic thread to default settings
+    #define LCDBL_BACK_dynamic_setDefaultTime(name)\
+        g_LCDBL_BACK_dynTime_##name =_LCDBL_BACK_time_default__##name
+        
+    // macro: restart dynamic thread time
+    #define LCDBL_BACK_dynamic_restartTimer(name)\
+        g_LCDBL_BACK_timer[g_LCDBL_BACK_id__##name] = (!LCDBL_bitReadValue(g_LCDBL_BACK_mil_mic, g_LCDBL_BACK_id__##name)) ? millis() : micros()        
+        
+    // macro: setTime 0
+    #define LCDBL_BACK_dynamic_timeToZero(name)\
+        g_LCDBL_BACK_timer[g_LCDBL_BACK_id__##name] = (!LCDBL_bitReadValue(g_LCDBL_BACK_mil_mic, g_LCDBL_BACK_id__##name)) ? (millis() +1) : (micros() + 1)
+
+
+// ---------------------------------------- 
+// Direct call
+// ---------------------------------------- 
+    // macro: call a thread
+    #define LCDBL_BACK_call(name)\
+        LCDBL_BACK_function_##name()
+    // macro: call a thread loop function
+    #define LCDBL_BACK_call_loop(name)\
+        LCDBL_BACK_loop_##name()
+    // macro: call a thread setup function
+    #define LCDBL_BACK_call_setup(name)\
+        LCDBL_BACK_setup_##name()
+    // macro: call a thread stable function
+    #define LCDBL_BACK_call_stable(name)\
+        LCDBL_BACK_stable_##name()    
+    
+
+
+//help macros
+    // macro: thread timer with return
+    // attention: when the wait_time is bigger then millis on startup the result ist true 
+    // to fix this, the timer_var have to be initialise with the waittime 
+    #define LCDBL_BACK_TIMER(timer_var, wait_time, time_type)\
+		if(!((time_type() - timer_var) >= wait_time)) {  return; }\
+		timer_var = time_type();
+        
+    //macro: thread is running with return !
+    #define LCDBL_BACK_THREAD_isRun(name)\
+        if(!LCDBL_bitReadValue(g_LCDBL_BACK_start_stop, g_LCDBL_BACK_id__##name)) { return; } 
+
+    //macro: reset the reset bin from a thread
+    #define LCDBL_BACK_UNSET_reset(name)\
+        LCDBL_bitWriteValue(g_LCDBL_BACK_reset, g_LCDBL_BACK_id__##name, true)        
+
+    //macro: get the reset bit from a thread
+    #define LCDBL_BACK_GET_reset(name)\
+        LCDBL_bitReadValue(g_LCDBL_BACK_reset, g_LCDBL_BACK_id__##name)        
+
+    //macro: create the thread setup function 
+    #define LCDBL_BACK_THREAD_FUNCTION_TIME_BASED(name, time)                                               \
+        void LCDBL_BACK_function_##name(void)                                                               \
+        {                                                                                                   \
+            LCDBL_BACK_THREAD_isRun(name);                                                                  \
+            if(LCDBL_BACK_GET_reset(name) == false) {                                                       \
+                LCDBL_BACK_UNSET_reset(name);                                                               \
+                LCDBL_BACK_setup_##name();                                                                  \
+                g_LCDBL_BACK_timer[g_LCDBL_BACK_id__##name] = time;                                         \
+            }                                                                                               \
+                                                                                                            \
+            if(!LCDBL_bitReadValue(g_LCDBL_BACK_mil_mic, g_LCDBL_BACK_id__##name)) {                        \
+                LCDBL_BACK_TIMER(g_LCDBL_BACK_timer[g_LCDBL_BACK_id__##name], time, millis);                \
+            } else {                                                                                        \
+                LCDBL_BACK_TIMER(g_LCDBL_BACK_timer[g_LCDBL_BACK_id__##name], time, micros);                \
+            }                                                                                               \
+                                                                                                            \
+            LCDBL_BACK_loop_##name();                                                                       \
+            g_LCDBL_BACK_loop_status = LCDBL_bitReadValue(g_LCDBL_BACK_ret, g_LCDBL_BACK_id__##name);       \
+        }
+
+    //macro: create the thread setup function 
+    #define LCDBL_BACK_THREAD_FUNCTION_EVENT_BASED(name)                                                    \
+        void LCDBL_BACK_function_##name(void)                                                               \
+        {                                                                                                   \
+            LCDBL_BACK_THREAD_isRun(name);                                                                  \
+            if(LCDBL_BACK_GET_reset(name) == true) {                                                        \
+                LCDBL_BACK_UNSET_reset(name);                                                               \
+                LCDBL_BACK_setup_##name();                                                                  \
+            }                                                                                               \
+                                                                                                            \
+            LCDBL_BACK_loop_##name();                                                                       \
+            g_LCDBL_BACK_loop_status = LCDBL_bitReadValue(g_LCDBL_BACK_ret, g_LCDBL_BACK_id__##name);       \
+            LCDBL_BACK_stop(name);                                                                          \
+        }
+
+    #define LCDBL_BACK_help_setup(id) \
+        LCDBL_BACK_setupInit_##id();
+
+    #define LCDBL_setup(N)\
+        LCDBL_DISP_initSetup(_LCDBL_DISP_cnt);\
+        LCDBL_BACK_help_setupInit(N)
+        
+        
+        
+    /* ------------------ 
+     * small message system                                                     
+     * ------------------
+     */   
+    // 
+    #define LCDML_MSG(id, name)    uint8_t  g_lcdml_msg_id__##name  = id    
+    // creates the 
+    #define LCDML_MSG_init(cnt)    uint8_t g_lcdml_msg_status[(cnt/7)+1]
+    // 
+    #define LCDML_MSG_set(name)    bitSet(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+    //    
+    #define LCDML_MSG_get(name)    bitRead(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+    // 
+    #define LCDML_MSG_clear(name)  bitClear(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+
+
     /* --------------------------------------- 
      * setup repeat                      
      * ---------------------------------------
@@ -829,6 +1255,13 @@
     #define LCDML_DISP_func_repeat_1() LCDML_DISP_func_repeat_0()   LCDML_DISP_1_function();
     #define LCDML_DISP_func_repeat_0() LCDML_DISP_0_function();
     #define LCDML_DISP_func_repeat(N) LCDML_DISP_func_repeat_ ## N ()
+
+
+        
     
     
+    
+   
+ 
+ 
 #endif

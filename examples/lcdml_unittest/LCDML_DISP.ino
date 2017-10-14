@@ -4,38 +4,36 @@
 //
 // =====================================================================
 
-
-
+// this function is for debugging and only called if it is enabled
+// enable it with LCDML.MENU_enableStatusCode();
+//void lcdml_menu_statusCodes()
+//{  
+//  Serial.println(LCDML.getStatusCode()); // get status code and reset it
+//}
 
 /* ******************************************************************** */
-void menu_display()
+void lcdml_menu_clear()
 /* ******************************************************************** */
 {
+  for(uint8_t i=0;i<15;i++) {
+    Serial.println();
+  }
+}
 
-  
-  /*
-  if (bitRead(LCDML.button,  _LCDML_button_quit)) {
-    return;   
-  } 
-  
-  bitClear(LCDML.button,  _LCDML_button_quit);
-  */ 
-
-  
-  
+/* ******************************************************************** */
+void lcdml_menu_display()
+/* ******************************************************************** */
+{
   // save the content text of every menu element
-  // _LCDML_DISP_cfg_max_string_length = 20 (default), can be changed in LCDMenuLib.h
-  char content_text[_LCDML_DISP_cfg_max_string_length]; 
-
-
-  
+  char content_text[_LCDML_DISP_cfg_max_string_length];  // can be changed in main tab
+    
   // init vars
   uint8_t n_max = (LCDML.MENU_getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.MENU_getChilds());
   
   // update content
   if (LCDML.DISP_chkMenuUpdate() || LCDML.DISP_chkMenuCursorUpdate() ) {
     // clear menu
-    LCDML.DISP_menuClear();
+    LCDML.DISP_clear();
 
     Serial.println(F("==========================================="));
     Serial.println(F("================  Menu ===================="));
@@ -67,8 +65,7 @@ void menu_display()
             break;
       
           default: // static content
-            //Serial.print(n);
-            LCDML_DISP_getContent(content_text, n); 
+            LCDML_getContent(content_text, n); 
             Serial.print(content_text);
             break;                
       }
@@ -78,22 +75,8 @@ void menu_display()
 }
 
 
-// lcd clear
-void menu_clear()
-{
-  for(uint8_t i=0;i<15;i++) {
-    Serial.println();
-  }
-}
 
 
-//Hier weitermachen 
-//Irgenwie einen Callback für das Backend einbinden um diesen Check zu vereinfachen und direkt aus der klasse zu beeinflussen. 
-
-void trigger_backend()
-{
-  LCDML_BACK_startDirect(LCDML_BACKEND_menu);  
-}
 
 
 
