@@ -7,7 +7,7 @@
  * EXAMPLE CODE:
 
 // *********************************************************************
-void your_function_name(void) 
+void your_function_name(uint8_t p) 
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
@@ -27,7 +27,7 @@ void your_function_name(void)
     // - with every button status change
 
     // check if any button is presed (enter, up, down, left, right)
-    if(LCDML.BT_chkAny()) {         
+    if(LCDML.BT_checkAny()) {         
       LCDML.FUNC_goBackToMenu();
     } 
   }
@@ -45,15 +45,8 @@ void your_function_name(void)
  */
 
 
-
-
-
-
-
-
-
 // *********************************************************************
-void mFunc_information(void)
+void mFunc_information(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
@@ -73,7 +66,7 @@ void mFunc_information(void)
   { 
     // loop function, can be run in a loop when LCDML_DISP_triggerMenu(xx) is set
     // the quit button works in every DISP function without any checks; it starts the loop_end function   
-    if(LCDML.BT_chkAny()) { // check if any button is presed (enter, up, down, left, right)
+    if(LCDML.BT_checkAny()) { // check if any button is presed (enter, up, down, left, right)
       // LCDML_goToMenu stops a running menu function and goes to the menu
       LCDML.FUNC_goBackToMenu();
     }
@@ -90,7 +83,7 @@ void mFunc_information(void)
 // *********************************************************************
 uint8_t g_func_timer_info = 0;  // time counter (global variable)
 unsigned long g_timer_1 = 0;    // timer variable (globale variable)
-void mFunc_timer_info(void)
+void mFunc_timer_info(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP ********* 
@@ -142,7 +135,7 @@ void mFunc_timer_info(void)
 
 // *********************************************************************
 uint8_t g_button_value = 0; // button value counter (global variable)
-void mFunc_p2(void)
+void mFunc_p2(uint8_t p)
 // *********************************************************************
 { 
   if(LCDML.FUNC_setup())          // ****** SETUP *********
@@ -165,9 +158,9 @@ void mFunc_p2(void)
   if(LCDML.FUNC_loop())           // ****** LOOP *********
   {    
     // the quit button works in every DISP function without any checks; it starts the loop_end function  
-    if (LCDML.BT_chkAny()) // check if any button is pressed (enter, up, down, left, right)
+    if (LCDML.BT_checkAny()) // check if any button is pressed (enter, up, down, left, right)
     {
-      if (LCDML.BT_chkLeft() || LCDML.BT_chkUp()) // check if button left is pressed
+      if (LCDML.BT_checkLeft() || LCDML.BT_checkUp()) // check if button left is pressed
       {
         LCDML.BT_resetLeft(); // reset the left button
         LCDML.BT_resetUp(); // reset the left button
@@ -195,7 +188,7 @@ void mFunc_p2(void)
 
 
 // *********************************************************************
-void mFunc_back(void)
+void mFunc_back(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
@@ -207,29 +200,27 @@ void mFunc_back(void)
 
 
 // *********************************************************************
-void mFunc_goRoot(void)
+void mFunc_goRoot(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
   {
     // go to root and display menu
-    LCDML.MENU_goRoot();
-    LCDML.DISP_menuUpdate();
+    LCDML.MENU_goRoot();    
   } 
 }
 
 // *********************************************************************
-void mFunc_jumpToFunc(void)
+void mFunc_jumpToFunc(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
   {
     // Jump to Initscreen
-    if(!LCDML.OTHER_goToFunc(mFunc_test_hidden)) // menu elment id and call back function allowed
+    if(!LCDML.OTHER_jumpToFunc(mFunc_p2)) // menu elment id and call back function allowed
     {
       // function not found or not callable
-      LCDML.MENU_goRoot();
-      LCDML.DISP_menuUpdate();     
+      LCDML.MENU_goRoot();           
     }
   }
 }
@@ -238,40 +229,34 @@ void mFunc_jumpToFunc(void)
 
 
 // *********************************************************************
-void mFunc_screensaver()
+void mFunc_screensaver(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********
   {
     Serial.println("start screensaver");
+    Serial.println("press any key to quit");
+    LCDML.FUNC_setLoopInterval(100);  // starts a trigger event for the loop function every 100 millisecounds
+  }
+
+  if(LCDML.FUNC_loop())
+  {
+    if (LCDML.BT_checkAny()) // check if any button is pressed (enter, up, down, left, right)
+    {      
+      LCDML.FUNC_goBackToMenu();     
+    }
+  } 
+
+  if(LCDML.FUNC_stableEnd())
+  {
+     LCDML.MENU_goRoot();
   }
 }
 
-// *********************************************************************
-void mFunc_initscreen()
-// *********************************************************************
-{
-  if(LCDML.FUNC_setup())          // ****** SETUP *********
-  {
-    Serial.println("start initscreen");
-  }
 
-  if(LCDML.FUNC_loop())           // ****** LOOP ********* 
-  {
-    //
-    
-  }
-
-  if(LCDML.FUNC_stableEnd())      // ****** STABLE END *********
-  {
-    LCDML.MENU_goRoot();
-  }
-
-  
-}
 
 // *********************************************************************
-void mFunc_test_hidden()
+void mFunc_test_hidden(uint8_t p)
 // *********************************************************************
 {
   if(LCDML.FUNC_setup())          // ****** SETUP *********

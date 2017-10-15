@@ -36,7 +36,7 @@
  */
 
 #include "LCDMenuLib_menu.h"
-
+#include "LCDMenuLib_typedef.h"
 
 
 
@@ -183,7 +183,7 @@ uint8_t LCDMenuLib_menu::getID()
     return id;
 }
 
-boolean LCDMenuLib_menu::chkCondetion()
+boolean LCDMenuLib_menu::checkCondetion()
 {
     if(condetion_function != NULL)
     {
@@ -200,14 +200,14 @@ uint8_t LCDMenuLib_menu::getParam() {
     return param;
 }
 
-void LCDMenuLib_menu::callback()
+void LCDMenuLib_menu::callback(uint8_t p)
 {
     if(callback_function != NULL) {
-        callback_function();
+        callback_function(p);
     }
 }
 
-boolean LCDMenuLib_menu::chkCallback()
+boolean LCDMenuLib_menu::checkCallback()
 {
     if(callback_function == NULL) {
         return false;
@@ -215,3 +215,21 @@ boolean LCDMenuLib_menu::chkCallback()
         return true;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

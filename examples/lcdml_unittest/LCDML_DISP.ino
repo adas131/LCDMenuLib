@@ -26,53 +26,203 @@ void lcdml_menu_display()
 {
   // save the content text of every menu element
   char content_text[_LCDML_DISP_cfg_max_string_length];  // can be changed in main tab
-    
+  
   // init vars
-  uint8_t n_max = (LCDML.MENU_getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.MENU_getChilds());
+  //uint8_t n_max = (LCDML.MENU_getChilds() >= _LCDML_DISP_rows) ? _LCDML_DISP_rows : (LCDML.MENU_getChilds());
   
   // update content
-  if (LCDML.DISP_chkMenuUpdate() || LCDML.DISP_chkMenuCursorUpdate() ) {
+  if (LCDML.DISP_checkMenuUpdate() || LCDML.DISP_checkMenuCursorUpdate() ) {
     // clear menu
     LCDML.DISP_clear();
 
     Serial.println(F("==========================================="));
     Serial.println(F("================  Menu ===================="));
     Serial.println(F("==========================================="));
-    // display rows
-    for (uint8_t n = 0; n < n_max; n++)
-    {      
-      //set cursor char
-      if (n == LCDML.MENU_getCursorPos()) {
-        Serial.print(F("(x) "));          
-      } else {
-        Serial.print(F("( ) "));
-      }                
-      // print content
-      // with content id you can add special content to your static menu or replace the content
-      // the content_id contains the id wich is set on main tab for a menuitem
-      switch(LCDML.DISP_getMenuContentId(n))
-      {         
-          //case 0:
-          //    Serial.print("special"); // or datetime or other things
-          //    break;         
+   
+    LCDMenuLib_menu *tmp;    
 
-          case 3: 
-            Serial.print(F("Placeholder 1"));
-            break;
+    uint8_t i = LCDML.MENU_getScroll();
+    uint8_t maxi = _LCDML_DISP_rows + i;
+    uint8_t n = 0;
+    
+    //check children
+    if (tmp = LCDML.MENU_getObj()->getChild(LCDML.MENU_getScroll())) 
+    {        
+      do
+      {            
+        // check if a menu element has a condetion and if the condetion be true               
+        if (tmp->checkCondetion()) 
+        {
+          if(tmp->getParam() != _LCDML_TYPE_dynParam || tmp->checkCallback() == false)
+          {
+            if (n == LCDML.MENU_getCursorPos()) 
+            {
+              Serial.print(F("(x) "));          
+            } 
+            else 
+            {
+              Serial.print(F("( ) "));
+            } 
 
-          case 4:
-            Serial.print(F("Placeholder 2"));
-            break;
-      
-          default: // static content
-            LCDML_getContent(content_text, n); 
+            // display normal content
+            LCDML_getContent(content_text, tmp->getID()); 
             Serial.print(content_text);
-            break;                
-      }
-      Serial.println();
-    } 
+            Serial.println();
+          }            
+          else 
+          {            
+            tmp->callback(n);              
+          }                  
+           
+          i++; 
+          n++;             
+        }            
+      } while (((tmp = tmp->getSibling(1)) != NULL) && (i < maxi));
+    }
   }
 }
+
+
+
+/* ===================================================================== *
+ *                                                                       *
+ * Dynamic content                                                       *
+ *                                                                       *
+ * ===================================================================== *
+ */
+
+
+// *********************************************************************
+uint8_t g_dynParam = 100; // when this value comes from an eeprom, load it in setup 
+                          // at the moment here is no setup function (todo) 
+void cFunc_s1(uint8_t n)
+// *********************************************************************
+{ 
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));
+
+    // make only an action when the cursor stands on this menuitem
+    //check Button
+    if(LCDML.BT_checkAny()) {
+      if(LCDML.BT_checkEnter()) {
+        // dosomething for example save the data or something else
+        Serial.println("Save data");     
+        LCDML.BT_resetEnter();
+      }
+      if(LCDML.BT_checkLeft()) {
+        g_dynParam++;
+        LCDML.BT_resetLeft();
+      }
+      if(LCDML.BT_checkRight()) {
+        g_dynParam--;
+        LCDML.BT_resetRight();
+      }
+    }
+
+              
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+ 
+
+  // display normal content    
+  Serial.print(F("change 'a' or 'd': "));
+  Serial.println(g_dynParam);
+  
+}
+
+// *********************************************************************
+void cFunc_s2(uint8_t n)
+// *********************************************************************
+{  
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));          
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+  // display normal content    
+  Serial.println(F("dummy 2"));  
+}
+
+// *********************************************************************
+void cFunc_s3(uint8_t n)
+// *********************************************************************
+{  
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));          
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+  // display normal content    
+  Serial.println(F("dummy 3"));    
+}
+
+// *********************************************************************
+void cFunc_s4(uint8_t n)
+// *********************************************************************
+{
+ 
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));          
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+  // display normal content    
+  Serial.println(F("dummy 4"));   
+}
+
+// *********************************************************************
+void cFunc_s5(uint8_t n)
+// *********************************************************************
+{  
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));          
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+  // display normal content    
+  Serial.println(F("hidden dummy 5"));    
+}
+
+
+// *********************************************************************
+void cFunc_s6(uint8_t n)
+// *********************************************************************
+{  
+  if (n == LCDML.MENU_getCursorPos()) 
+  {
+    Serial.print(F("(x) "));          
+  } 
+  else 
+  {
+    Serial.print(F("( ) "));
+  } 
+
+  // display normal content    
+  Serial.println(F("dummy 6"));    
+}
+
+
 
 
 

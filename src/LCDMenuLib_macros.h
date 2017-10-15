@@ -62,8 +62,8 @@
             const char g_LCDML_DISP_lang_ ## name ##_var[] PROGMEM = {content}
             
         #define LCDML_getContent(var, id) \
-            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
-                strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]))); \
+            if(id != _LCDML_NO_FUNC) {\
+                strcpy_P(var, (char*)pgm_read_word(&(g_LCDML_DISP_lang_table[id]))); \
             }
                     
         #define LCDML_createMenu(N)\
@@ -80,8 +80,8 @@
             char g_LCDML_DISP_lang_ ## name ##_var[_LCDML_DISP_cfg_max_string_length] = {content}
                     
         #define LCDML_getContent(var, id) \
-            if(LCDML.DISP_getMenuContentId(id) != _LCDML_NO_FUNC) {\
-                strcpy(var, g_LCDML_DISP_lang_table[LCDML.DISP_getMenuContentId(id)]); \
+            if(id != _LCDML_NO_FUNC) {\
+                strcpy(var, g_LCDML_DISP_lang_table[id]); \
             }
                     
         #define LCDML_createMenu(N)\
@@ -98,7 +98,7 @@
          
     //Menu Item Types
         
-    #define LCDML_addAdvanced(id, parent, child, condetion, content, dyncallback, callback, param) \
+    #define LCDML_addAdvanced(id, parent, child, condetion, content, callback, param) \
         LCDML_LANG_DEF(id, content); \
         LCDMenuLib_menu parent ## _ ## child(id, param, callback, condetion ); \
         void LCDML_DISP_ ## id ## _function() { \
@@ -106,7 +106,7 @@
         }
         
     #define LCDML_add(id, parent, child, content, callback) \
-        LCDML_addAdvanced(id, parent, child, NULL, content, NULL, callback, 0)
+        LCDML_addAdvanced(id, parent, child, NULL, content, callback, 0)
         
     
     #define LCDML_setup(N)\

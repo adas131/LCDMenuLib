@@ -64,7 +64,11 @@
     
     // No function constante 
     #define _LCDML_NO_FUNC                      255
-
+    
+    //0-200 = parameter
+    #define _LCDML_TYPE_dynParam                201
+    
+    
     // Bit pos control
     #define _LCDML_control_menu_back            7
     #define _LCDML_control_disp_update          6
@@ -85,7 +89,7 @@
     #define _LCDML_funcReg_return               0
     
     
-    typedef void(* LCDML_FuncPtr)();
+
     
 
     // Configure arduino flash lib and load it*/
@@ -111,6 +115,7 @@
     
 
     // Include menu class
+    #include "LCDMenuLib_typedef.h"
     #include "LCDMenuLib_menu.h"
     
     #define _LCDML_button_free                  7
@@ -151,7 +156,7 @@
             LCDML_FuncPtr   callback_menuControl;
             LCDML_FuncPtr   callback_contentUpdate;     // Update Content            
             LCDML_FuncPtr   callback_contentClear;      // Clear Content 
-            LCDML_FuncPtr   cb_screensaver;
+            LCDML_FuncPtr2  cb_screensaver;
         
             // private variables            
             uint8_t reg1;                                    // */                                      
@@ -161,7 +166,6 @@
             uint8_t curloc;                                  // current corsor position          
             uint8_t scroll;                                  // current scroll position 
             uint8_t scroll_save[_LCDML_DISP_cfg_cursor_deep];// save cursor position for every layer 
-            uint8_t content_id[_LCDML_DISP_cfg_max_rows+1];  // save content ids that are displayed currently    
             uint8_t cursor_pos;                              // save the last cursor position when a menue element is called 
             uint8_t child_cnt;                               // how many childs exists on next layer 
             uint8_t layer;                                   // containes the current layer 
@@ -181,11 +185,11 @@
                                                              
             void    MENU_goInto();                                                    // activate the menu under the cursor     
             void    MENU_goBack();                                                    // move to the parent menu
-            void    MENU_setCursor();                                                 // set the cursor to the current position in the menu             
+            void    MENU_setCursor();                                                 // set the cursor to the current position in the menu 
             void    MENU_doScroll();                                                  // scroll the menu             
             void    MENU_goMenu(LCDMenuLib_menu &m);                                  // go to a menu element               
-            uint8_t MENU_selectElementDirect(LCDMenuLib_menu &p_m, uint8_t p_search); // works with jump to element on globale function            
-            uint8_t MENU_selectElementDirect2(LCDMenuLib_menu &p_m, LCDML_FuncPtr p_search);
+            boolean MENU_selectElementDirect(LCDMenuLib_menu &p_m, uint8_t p_search); // works with jump to element on globale function            
+            boolean MENU_selectElementDirect2(LCDMenuLib_menu &p_m, LCDML_FuncPtr2 p_search);
             uint8_t MENU_countChilds();                                               // how many childs exists on next layer             
             uint8_t MENU_curlocCorrection();                                          // correction of the cursor position with hidden button
             void    BT_control();
@@ -198,7 +202,9 @@
               
             // public methods
             void loop();
-           
+            
+                        
+            LCDMenuLib_menu * MENU_getObj();
             void    MENU_display(uint8_t update=0);     // Display the current menu on the lcd            
             void    MENU_goRoot();                      // jump to root menu            
             uint8_t MENU_getLayer();                    // get the layer where the cursor stands in the menu
@@ -207,6 +213,7 @@
             uint8_t MENU_getChilds();                   // get the number of childs from a parent element
             uint8_t MENU_getParentId();                 // get parent
             uint8_t MENU_getParentId(uint8_t p_layer);  // get parent id in a specific layer
+            uint8_t MENU_getScroll(void);
             void    MENU_enRollover(void);
             void    MENU_disRollover(void);
             
@@ -227,46 +234,40 @@
             void    BT_resetLeft();                     // reset left button 
             void    BT_resetRight();                    // reset right button 
                                                        
-            boolean BT_chkAny();                        // get state of all buttons
-            boolean BT_chkEnter();                      // get 
-            boolean BT_chkUp();                         // 
-            boolean BT_chkDown();                       //
-            boolean BT_chkLeft();                       //
-            boolean BT_chkRight();                      //
+            boolean BT_checkAny();                       // get state of all buttons
+            boolean BT_checkEnter();                     // get 
+            boolean BT_checkUp();                        // 
+            boolean BT_checkDown();                      //
+            boolean BT_checkLeft();                      //
+            boolean BT_checkRight();                     //
                                                    
-            void    DISP_menuUpdate();                  //
-            void    DISP_clear();                       //
-            boolean DISP_chkMenuUpdate();               //
-            boolean DISP_chkMenuCursorUpdate();         //   
-            uint8_t DISP_getMenuContentId(uint8_t n);   //         
+            void    DISP_menuUpdate();                      //
+            void    DISP_clear();                           //
+            boolean DISP_checkMenuUpdate();                 //
+            boolean DISP_checkMenuCursorUpdate();           //   
+            uint8_t DISP_getMenuContentId(uint8_t n);       //         
                                                     
-            boolean FUNC_setup();                       //
-            boolean FUNC_loop();                        //
-            boolean FUNC_stableEnd();                   //
-            void    FUNC_goBackToMenu(uint8_t e=0);                //       
-            uint8_t FUNC_getID();                       // get active id              
-            uint8_t FUNC_getParam();                    // get parameter
+            boolean FUNC_setup();                           //
+            boolean FUNC_loop();                            //
+            boolean FUNC_stableEnd();                       //
+            void    FUNC_goBackToMenu(uint8_t e=0);         //       
+            uint8_t FUNC_getID();                           // get active id              
             void    FUNC_setLoopInterval(unsigned long t);
             void    FUNC_disableScreensaver();
                         
-            boolean TIMER_ms(unsigned long &var, unsigned long t);
-            void    TIMER_msReset(unsigned long &var);            
-            boolean TIMER_us(unsigned long &var, unsigned long t);
-            void    TIMER_usReset(unsigned long &var);
+            boolean TIMER_ms(unsigned long &var, unsigned long t);  // 
+            void    TIMER_msReset(unsigned long &var);              // 
+            boolean TIMER_us(unsigned long &var, unsigned long t);  // 
+            void    TIMER_usReset(unsigned long &var);              // 
             
-            boolean OTHER_goToFunc(uint8_t id);
-            boolean OTHER_goToFunc(LCDML_FuncPtr p_search); 
+            boolean OTHER_jumpToFunc(uint8_t id);                     //
+            boolean OTHER_jumpToFunc(LCDML_FuncPtr2 p_search);        //
 
-            void    SCREEN_enable(LCDML_FuncPtr function, unsigned long t);
-            void    SCREEN_disable();
-            void    SCREEN_resetTimer();
+            void    SCREEN_enable(LCDML_FuncPtr2 function, unsigned long t);    //
+            void    SCREEN_disable();                                           //
+            void    SCREEN_resetTimer();                                        //
             
-            boolean DCONT_setup();
-            boolean DCONT_loop();
-            boolean DCONT_stableEnd();
-            
-            boolean DCONT_call();
-            
+            boolean DP_check(uint8_t n);                                        //
     };
 #endif
 

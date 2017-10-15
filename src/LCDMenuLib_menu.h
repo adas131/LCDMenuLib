@@ -39,9 +39,9 @@
 #   define LCDMenuLib_menu_h
 
 #   include "Arduino.h"
+#   include "LCDMenuLib_typedef.h"
 
-    typedef void(* LCDML_Menu_FuncPtr)();
-    typedef boolean (* LCDML_Con_FuncPtr)();
+    
  
     class LCDMenuLib_menu
     {
@@ -54,15 +54,15 @@
             void addSibling(LCDMenuLib_menu &s,LCDMenuLib_menu &p); // Adds a sibling s with parent p.  If the menu already has a sibling, ask that sibling to add it
             
             uint8_t id;                                             // Name of this menu           
-            uint8_t param;                                          // element config (0-3 : parameter, 4 = callback function, 5 = switch function, 6-7 free)
+            uint8_t param;
             
         public:  
              // Constructs the menu with a name and a NULL use function (be careful calling it)
             LCDMenuLib_menu(uint8_t p_id, uint8_t p_param, LCDML_Menu_FuncPtr p_callback_function, LCDML_Con_FuncPtr p_condetion_function);           
             
-            LCDML_Menu_FuncPtr callback_function;                   // Menu Funktion callback
-            LCDML_Menu_FuncPtr callback_function2;                   // Menu Funktion callback
+            LCDML_Menu_FuncPtr callback_function;                   // Menu Funktion callback            
             LCDML_Con_FuncPtr condetion_function;                   // Menu Condetion callback
+            
             
             
             void addChild(LCDMenuLib_menu &c);                      // Adds the child c to the menu.  
@@ -72,10 +72,14 @@
             LCDMenuLib_menu * getParent();                          // Returns this menu's parent menu.  If no parent, returns itself
             
             uint8_t getID();                                        // return the id of a menu element
-            boolean chkCondetion();                                 // check menu display condetion
+            boolean checkCondetion();                                 // check menu display condetion
             uint8_t getParam();                                     // return a parameter which is set on the initialisation
             
-            void callback();                                        // call menu callback
-            boolean chkCallback();                                  // check if callback can called
+            void callback(uint8_t p);                                        // call menu callback
+            boolean checkCallback();                                  // check if callback can called
+            
+           
+           
+            
     };
 #endif
