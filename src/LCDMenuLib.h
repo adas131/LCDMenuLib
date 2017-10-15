@@ -75,7 +75,7 @@
     #define _LCDML_control_rollover             1
     #define _LCDML_control_disable_hidden       0
     
-    #define _LCDML_funcReg_f7                   7
+    #define _LCDML_funcReg_disable_screensaver  7
     #define _LCDML_funcReg_f6                   6
     #define _LCDML_funcReg_f5                   5
     #define _LCDML_funcReg_f4                   4
@@ -150,7 +150,8 @@
             // callback functions
             LCDML_FuncPtr   callback_menuControl;
             LCDML_FuncPtr   callback_contentUpdate;     // Update Content            
-            LCDML_FuncPtr   callback_contentClear;      // Clear Content       
+            LCDML_FuncPtr   callback_contentClear;      // Clear Content 
+            LCDML_FuncPtr   cb_screensaver;
         
             // private variables            
             uint8_t reg1;                                    // */                                      
@@ -172,6 +173,9 @@
 
             unsigned long menu_timer;
             unsigned long menu_default_time;
+            
+            unsigned long screensaver_timer;
+            unsigned long screensaver_default_time;
             
             // private methods
                                                              
@@ -238,16 +242,31 @@
                                                     
             boolean FUNC_setup();                       //
             boolean FUNC_loop();                        //
-            boolean FUNC_close();                       //
+            boolean FUNC_stableEnd();                   //
             void    FUNC_goBackToMenu(uint8_t e=0);                //       
             uint8_t FUNC_getID();                       // get active id              
             uint8_t FUNC_getParam();                    // get parameter
             void    FUNC_setLoopInterval(unsigned long t);
+            void    FUNC_disableScreensaver();
+                        
+            boolean TIMER_ms(unsigned long &var, unsigned long t);
+            void    TIMER_msReset(unsigned long &var);            
+            boolean TIMER_us(unsigned long &var, unsigned long t);
+            void    TIMER_usReset(unsigned long &var);
             
-            boolean OTHER_timer_ms(unsigned long &var, unsigned long t);
-            boolean OTHER_timer_us(unsigned long &var, unsigned long t);
             boolean OTHER_goToFunc(uint8_t id);
-            boolean OTHER_goToFunc(LCDML_FuncPtr p_search);                      
+            boolean OTHER_goToFunc(LCDML_FuncPtr p_search); 
+
+            void    SCREEN_enable(LCDML_FuncPtr function, unsigned long t);
+            void    SCREEN_disable();
+            void    SCREEN_resetTimer();
+            
+            boolean DCONT_setup();
+            boolean DCONT_loop();
+            boolean DCONT_stableEnd();
+            
+            boolean DCONT_call();
+            
     };
 #endif
 

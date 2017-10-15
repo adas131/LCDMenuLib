@@ -82,12 +82,27 @@ LCDMenuLib::LCDMenuLib(LCDMenuLib_menu &p_r, const uint8_t p_rows, const uint8_t
 void LCDMenuLib::loop()
 {
     // Check Control
-    BT_control();
+    if(callback_menuControl != NULL)
+    {
+        callback_menuControl();
+    }    
+    
+    //Screensaver
+    if(cb_screensaver != NULL && bitRead(funcReg, _LCDML_funcReg_disable_screensaver) == false)
+    {
+        if(activMenu->callback_function != cb_screensaver) // check if screensaver is active
+        {
+            if(TIMER_ms(screensaver_timer, screensaver_default_time)) 
+            {
+                OTHER_goToFunc(cb_screensaver);
+            }
+        }
+    }
     
     // Check Function
     if(activMenu != NULL)
     {        
-        if(OTHER_timer_ms(menu_timer, menu_default_time) || bitRead(funcReg, _LCDML_funcReg_setup) == 0 || button > 0) 
+        if(TIMER_ms(menu_timer, menu_default_time) || bitRead(funcReg, _LCDML_funcReg_setup) == 0 || button > 0) 
         {            
             FUNC_call();            
         }
@@ -333,6 +348,7 @@ void        LCDMenuLib::MENU_goRoot()
     } 
     
     BT_resetAll();
+    bitClear(funcReg, _LCDML_funcReg_disable_screensaver);
     bitClear(funcReg, _LCDML_funcReg_end);
     bitClear(funcReg, _LCDML_funcReg_setup);        
     activMenu = NULL; 
@@ -920,7 +936,7 @@ boolean LCDMenuLib::FUNC_loop()
  * @return
  *    
  * ******************************************************************** */
-boolean LCDMenuLib::FUNC_close()
+boolean LCDMenuLib::FUNC_stableEnd()
 {
     if(activMenu != NULL) 
     {
@@ -954,6 +970,7 @@ void LCDMenuLib::FUNC_goBackToMenu(uint8_t e)
         activMenu = NULL;        
     }
     BT_resetAll();
+    bitClear(funcReg, _LCDML_funcReg_disable_screensaver);
     bitClear(funcReg, _LCDML_funcReg_end);
     bitClear(funcReg, _LCDML_funcReg_setup);       
    
@@ -966,24 +983,18 @@ void LCDMenuLib::FUNC_goBackToMenu(uint8_t e)
 
 
 
+void    LCDMenuLib::FUNC_disableScreensaver()
+{
+    bitSet(funcReg, _LCDML_funcReg_disable_screensaver);
+}
+
+
+
 
 /* ******************************* 
    BT_
  * ******************************* */
 
-/* ******************************************************************** *
- * public: 
- * @param
- * @return
- *    
- * ******************************************************************** */
-void LCDMenuLib::BT_control()
-{
-     if(callback_menuControl != NULL)
-     {
-        callback_menuControl();
-     }
-}
 
 /* ******************************************************************** *
  * public: 
@@ -1013,6 +1024,9 @@ boolean LCDMenuLib::BT_setup()
  * ******************************************************************** */
 void LCDMenuLib::BT_enter()             
 { 
+    bitSet(button, _LCDML_button_enter);
+    SCREEN_resetTimer();
+    
     if(activMenu == NULL) 
     {            
         //menu is active      
@@ -1020,13 +1034,6 @@ void LCDMenuLib::BT_enter()
         
         bitSet(control, _LCDML_control_update_direct);
     }
-    else
-    {
-        
-    }
-    
-    bitSet(button, _LCDML_button_enter);
-    
 } 
 
 /* ******************************************************************** *
@@ -1037,7 +1044,8 @@ void LCDMenuLib::BT_enter()
  * ******************************************************************** */
 void LCDMenuLib::BT_up()                
 { 
-    bitSet(button, _LCDML_button_up);  
+    bitSet(button, _LCDML_button_up);
+    SCREEN_resetTimer();
 
     if(activMenu == NULL) 
     {
@@ -1074,6 +1082,7 @@ void LCDMenuLib::BT_up()
 void LCDMenuLib::BT_down()              
 {
     bitSet(button, _LCDML_button_down);
+    SCREEN_resetTimer();
     
     if(activMenu == NULL) 
     {
@@ -1105,6 +1114,7 @@ void LCDMenuLib::BT_down()
 void LCDMenuLib::BT_left()              
 {
     bitSet(button, _LCDML_button_left);
+    SCREEN_resetTimer();
     
     if(activMenu == NULL)
     {
@@ -1120,7 +1130,9 @@ void LCDMenuLib::BT_left()
  * ******************************************************************** */
 void LCDMenuLib::BT_right()             
 { 
-    bitSet(button, _LCDML_button_right);   
+    bitSet(button, _LCDML_button_right);
+    SCREEN_resetTimer();
+    
     if(activMenu == NULL)
     {
         DISP_menuUpdate();
@@ -1135,6 +1147,8 @@ void LCDMenuLib::BT_right()
  * ******************************************************************** */
 void LCDMenuLib::BT_quit()              
 { 
+    SCREEN_resetTimer();
+    
     if(activMenu != NULL) 
     {
         FUNC_goBackToMenu();
@@ -1176,7 +1190,16 @@ void LCDMenuLib::BT_resetRight()        { bitClear(button, _LCDML_button_right);
 
 
 
-
+/* ******************************************************************** *
+ * public: 
+ * @param
+ * @return
+ *    
+ * ******************************************************************** */
+void    LCDMenuLib::TIMER_msReset(unsigned long &var)
+{
+    var = millis();
+}
 
 /* ******************************************************************** *
  * public: 
@@ -1184,7 +1207,7 @@ void LCDMenuLib::BT_resetRight()        { bitClear(button, _LCDML_button_right);
  * @return
  *    
  * ******************************************************************** */
-boolean LCDMenuLib::OTHER_timer_ms(unsigned long &var, unsigned long t)
+boolean LCDMenuLib::TIMER_ms(unsigned long &var, unsigned long t)
 {
     if((millis() - var) >= t) 
     {
@@ -1197,13 +1220,25 @@ boolean LCDMenuLib::OTHER_timer_ms(unsigned long &var, unsigned long t)
     }
 }
 
+
 /* ******************************************************************** *
  * public: 
  * @param
  * @return
  *    
  * ******************************************************************** */
-boolean LCDMenuLib::OTHER_timer_us(unsigned long &var, unsigned long t)
+void    LCDMenuLib::TIMER_usReset(unsigned long &var)
+{
+    var = micros();
+}
+
+/* ******************************************************************** *
+ * public: 
+ * @param
+ * @return
+ *    
+ * ******************************************************************** */
+boolean LCDMenuLib::TIMER_us(unsigned long &var, unsigned long t)
 {
     if((micros() - var) >= t) 
     {
@@ -1260,6 +1295,30 @@ boolean LCDMenuLib::OTHER_goToFunc(LCDML_FuncPtr p_search)
         return false;
     }
 }
+
+
+
+void    LCDMenuLib::SCREEN_enable(LCDML_FuncPtr function, unsigned long t)
+{
+    cb_screensaver = function;
+    screensaver_default_time = t;
+    
+}
+
+
+void    LCDMenuLib::SCREEN_disable()
+{
+   cb_screensaver = NULL;
+}
+
+
+void    LCDMenuLib::SCREEN_resetTimer()
+{
+    TIMER_msReset(screensaver_timer);    
+}
+
+
+
 
 
 

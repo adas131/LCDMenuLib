@@ -98,12 +98,15 @@
          
     //Menu Item Types
         
-    #define LCDML_add(id, parent, child, group, content, dyncallback, callback, param) \
+    #define LCDML_addAdvanced(id, parent, child, condetion, content, dyncallback, callback, param) \
         LCDML_LANG_DEF(id, content); \
-        LCDMenuLib_menu parent ## _ ## child(id, param, callback, group ); \
+        LCDMenuLib_menu parent ## _ ## child(id, param, callback, condetion ); \
         void LCDML_DISP_ ## id ## _function() { \
             parent.addChild(parent ## _ ## child); \
         }
+        
+    #define LCDML_add(id, parent, child, content, callback) \
+        LCDML_addAdvanced(id, parent, child, NULL, content, NULL, callback, 0)
         
     
     #define LCDML_setup(N)\
@@ -455,19 +458,19 @@
         
         
     /* ------------------ 
-     * small message system                                                     
+     * small message system (Signal system)                                                     
      * ------------------
      */   
     // 
-    #define LCDML_MSG(id, name)    uint8_t  g_lcdml_msg_id__##name  = id    
+    #define LCDSL(id, name)    uint8_t  g_lcdml_msg_id__##name  = id    
     // creates the 
-    #define LCDML_MSG_init(cnt)    uint8_t g_lcdml_msg_status[(cnt/7)+1]
+    #define LCDSL_init(cnt)    uint8_t g_lcdml_msg_status[(cnt/7)+1]
     // 
-    #define LCDML_MSG_set(name)    bitSet(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+    #define LCDSL_set(name)    bitSet(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
     //    
-    #define LCDML_MSG_get(name)    bitRead(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+    #define LCDSL_get(name)    bitRead(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
     // 
-    #define LCDML_MSG_clear(name)  bitClear(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
+    #define LCDSL_clear(name)  bitClear(g_lcdml_msg_status[g_lcdml_msg_id__##name/7], g_lcdml_msg_id__##name%7)
 
 
     /* --------------------------------------- 
